@@ -46,13 +46,6 @@ See [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ### License
 
-<<<<<<< HEAD
 Copyright © 2022, Office for National Statistics (https://www.ons.gov.uk)
 
 Released under MIT license, see [LICENSE](LICENSE.md) for details.
-=======
-Copyright © 2021, Office for National Statistics (https://www.ons.gov.uk)
-
-Released under MIT license, see [LICENSE](LICENSE.md) for details.
-
->>>>>>> temp/move-codebase-to-dp-geodata-api
