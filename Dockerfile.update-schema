@@ -1,0 +1,20 @@
+# This creates a docker image to build and run update-schema against
+# the local docker postgres instance.
+# 
+
+FROM golang:1.17.6
+
+WORKDIR /go/src/app
+
+COPY . .
+
+RUN go get -d -v ./...
+
+ENV PGHOST=db
+ENV PGPORT=5432
+ENV PGDATABASE=census
+ENV PGUSER=insights
+ENV PGPASSWORD=insights
+ENV POSTGRES_PASSWORD=mylocalsecret
+
+CMD ["make", "update-schema"]

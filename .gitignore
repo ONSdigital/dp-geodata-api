@@ -10,3 +10,16 @@
 .idea/
 *.iml
 *.iws
+
+# vim
+.*.un~
+Session.vim
+
+# terraform
+.terraform
+.terraform.lock.hcl
+
+secrets/PGPASSWORD.env
+
+# postgres 
+dbdata

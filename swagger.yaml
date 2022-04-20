@@ -1,0 +1,782 @@
+#
+# IMPORTANT: run 'make generate' after editing this file!
+#
+ 
+openapi: "3.0.0"
+info:
+  title: "dp-find-insights-poc-api"
+  description: "Find Insights Geodata API is a service for querying census data/metadata by geography (named geographies or various coordinate-based queries)."
+  version: 1.0.0
+  license:
+    name: "Open Government Licence v3.0"
+    url: "http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+
+paths:
+  /{path}/{year}:
+    options:
+      operationId: Preflight
+      tags:
+        - public
+      summary: CORS preflight OPTIONS request
+      parameters:
+        - in: path
+          name: path
+          schema:
+            type: string
+        - in: path
+          name: year
+          schema:
+            type: integer
+      responses:
+        200:
+          description: response
+
+  /metadata/{year}:
+    get:
+      tags:
+        - public
+      summary: Get Metadata
+      description: Returns json describing census data available from the API - names, descriptive text, and structure (into topics, tables etc).
+      parameters:
+        - in: path
+          name: year
+          description: |
+            Census year. Currently available:
+            - 2011
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: filtertotals
+          description: Use filtertotals=true if you want to have 'totals' categories separated from other categories in the response (see Examples).
+          schema:
+            type: boolean
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetadataResponse"
+        default:
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+  /swagger:
+    get:
+      tags:
+        - spec
+      summary: spec
+      description: spec
+      responses:
+        200:
+          description: "Returns a JSON form of this file"
+          content:
+            application/json:
+
+  /swaggerui:
+    get:
+      tags:
+        - spec
+      summary: spec
+      description: spec
+      responses:
+        200:
+          description: "Returns swaggerui HTML form"
+          content:
+            text/html:
+
+  /health:
+    get:
+      tags:
+        - doc
+      summary: Returns API's health status
+      description: Returns health status of the API and checks on dependent services
+      responses:
+        200:
+          description: "Successfully returns OK status with checks of dependent services"
+          content:
+            application/json:
+            schema:
+              $ref: "#/components/schemas/Health"
+        429:
+          description: "Services warming up or degraded (at least one check in WARNING or CRITICAL status)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+        default:
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /msoa/{postcode}:
+    get:
+      tags:
+        - public
+      summary: return MSOA code and its name
+      parameters:
+        - in: path
+          name: postcode
+          description: |
+            Postcode 
+            -  SW1A 1AA
+          required: true
+          schema:
+            type: string
+      
+      responses:
+        200:
+          description: CSV of MSOA code and name
+          content:
+            text/plain:
+              schema:
+                type: string
+        default:
+          description: internal server error
+          content:
+            application/json:
+              schmea:
+                $ref: '#/components/schemas/Error'
+
+
+  /ckmeans/{year}:
+    get:
+      tags:
+        - public
+      summary: calculate ckmeans over a given category and geography type
+      description: |
+        Uses ckmeans algorithm to estimate natural breakpoints in the given census data category (*cat* parameter), 
+        filtered to only rows for the specified geography type (*geotype* parameter). Returns JSON with list of the 
+        maximum values (i.e. the upper breakpoint) in each ckmean cluster, keyed to both geotype and category 
+        (see examples). Optionally can estimates for data breaks in ratios of one category to another, if the 'divide_by'
+        parameter is supplied (see below).
+
+        Also returns a min_max array for each category / geotype requested - this is a two-value array with the min
+        and max values for the category (raw if divide_by not populated, min/max ratios if it is).
+      parameters:
+        - in: path
+          name: year
+          description: |
+            Census year. Currently available:
+            - 2011
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: cat
+          description: |
+            The census data category to calculate data breaks for. 
+            (NB - use metadata endpoint to see list of currently available census data).
+            Can be:
+              - single values (e.g. QS202EW0002)
+              - comma-separated array of values (e.g QS202EW0003,QS202EW0003,QS202EW0004)
+
+            Multiple cats parameters can be supplied, e.g. cats=QS202EW0002&cats=QS202EW0003
+            NB - use of ranges (e.g. QS202EW0003...QS202EW0004) is NOT supported for the ckmeans endpoint.
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
+          name: geotype
+          description: |
+            The type of geography to calculate data breaks for.
+            At the moment these options are supported:
+              - LAD
+              - LSOA
+            
+            Can be: 
+              - single values (e.g. LAD)
+              - comma-separated array of values (e.g LAD,LSOA)
+
+            Multiple geotype parameters can be supplied, e.g. geotype=LAD&geotype=LSOA
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
+          name: k
+          description: The number of data breaks to estimate.
+          schema:
+            type: integer
+        - in: query
+          name: divide_by
+          description: |
+            (OPTIONAL) - census data category to use as denominator (cat/divide_by) to ratios for calculating data 
+            breaks, instead of raw data (NB if multiple cat are supplied, each cat will be divided by divide_by). Only
+            single values for divide_by are supported.           
+          schema:
+            type: string
+      responses:
+        200:
+          description: ckmeans successfully calculated
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: number
+                  format: double
+                example: |
+                  single geotype, single category:
+                  {
+                    "QS101EW0002": {
+                      "LSOA": [
+                        0.5433526011560693,
+                        0.7609518658734451,
+                        0.9072164948453608,
+                        0.9783929777177582,
+                        1
+                      ],
+                      "LSOA_min_max": [
+                        0.0022461814914645105,
+                        0.8884943181818182
+                      ]
+                    }
+                  }
+                  
+                  multiple geotype, multiple category:
+                  {
+                    "QS101EW0002": {
+                      "LAD": [
+                        0.9165886162327063,
+                        0.9613281427511096,
+                        0.9772694272476471,
+                        0.9869511834452102,
+                        0.9963767340679719
+                      ],
+                      "LAD_min_max": [
+                        0.0022461814914645105,
+                        0.8884943181818182
+                      ]
+                      "LSOA": [
+                        0.5433526011560693,
+                        0.7609518658734451,
+                        0.9072164948453608,
+                        0.9783929777177582,
+                        1
+                      ],
+                      "LSOA_min_max": [
+                        0.0022461814914645105,
+                        0.8884943181818182
+                      ]
+                    },
+                    "QS101EW0003": {
+                      "LAD": [
+                        0.012890145455898219,
+                        0.022561772874335508,
+                        0.03631411711302769,
+                        0.06462149954832881,
+                        0.13338500165500092
+                      ],
+                      "LAD_min_max": [
+                        0.0022461814914645105,
+                        0.8884943181818182
+                      ],
+                      "LSOA": [
+                        0.021602513747054203,
+                        0.09240622140896615,
+                        0.23637289862455427,
+                        0.45350227109729857,
+                        0.8673925724285436
+                      ],
+                      "LSOA_min_max": [
+                        0.0022461814914645105,
+                        0.8884943181818182
+                      ]
+                    }
+                  }
+
+        204:
+          descriptions: no results found
+        400:
+          description: missing or badly formed input values
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        default:
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /ckmeansratio/{year}:
+    get:
+      tags:
+        - public
+      summary: calculate ckmeans for the ratio between two given categories (cat1 / cat2) for a given geography type
+      description: |
+        Uses ckmeans algorithm to estimate natural breakpoints in the ratio between two given census data category 
+        (*cat1* paramter / *cat2* parameter), filtered to only rows for the specified geography type (*geotype* parameter). 
+        Returns a list of the maximum values (i.e. the upper breakpoint) in each ckmean cluster.
+      parameters:
+        - in: path
+          name: year
+          description: |
+            Census year. Currently available:
+            - 2011
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: cat1
+          description: |
+            The census data category to use as numerator (cat1/cat2) when producing the ratio to calculate data breaks for 
+            (NB - use metadata endpoint to see list of currently available census data).
+          schema:
+            type: string
+        - in: query
+          name: cat2
+          description: |
+            The census data category to use as denominator (cat1/cat2) when producing the ratio to calculate data breaks for 
+            (NB - use metadata endpoint to see list of currently available census data).
+          schema:
+            type: string
+        - in: query
+          name: geotype
+          description: The type of geography to calculate data breaks for.
+          schema:
+            type: string
+        - in: query
+          name: k
+          description: The number of data breaks to estimate.
+          schema:
+            type: integer
+      responses:
+        200:
+          description: ckmeans successfully calculated
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: number
+                  format: double
+                example: |
+                  [
+                    0.5433526011560693,
+                    0.7609518658734451,
+                    0.9072164948453608,
+                    0.9783929777177582,
+                    1
+                  ]
+        204:
+          descriptions: no results found
+        400:
+          description: missing or badly formed input values
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        default:
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /query/{year}:
+    get:
+      tags:
+        - public
+      summary: query census
+      parameters:
+        - in: path
+          name: year
+          description: |
+            Census year. Currently available:
+            - 2011
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: rows
+          description: |
+            [ONS codes](https://en.wikipedia.org/wiki/ONS_coding_system) for the geographies that you
+            want data for. Can be: 
+            - single values (e.g. E01000001)
+            - comma-separated array of values (e.g E01000001,E01000002,E01000003)
+            - ellipsis-separated contiguous range of values (e.g. E01000001...E01000010)
+
+            Multiple rows parameters can be supplied, e.g. rows=E01000001&rows=E01000001...E01000010
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
+          name: cols
+          description: |
+            The census data that you want (NB - use metadata endpoint to see list of currently available census data). Can be:
+            - single values (e.g. QS101EW0001)
+            - comma-separated array of values (e.g QS101EW0001,QS101EW0002,QS101EW0003)
+            - ellipsis-separated contiguous range of values (e.g. QS101EW0001...QS101EW0010)
+
+            Multiple cols parameters can be supplied, e.g. cols=QS101EW0001&rows=QS101EW0001...QS101EW0010
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
+          name: bbox
+          description: |
+           Two long, lat coordinate pairs representing the opposite corners of a bounding box (e.g. bbox=0.1338,51.4635,0.1017,51.4647). 
+           This will select all geographies that lie within this bounding box. Bbox can be used instead of, or in combination with the 
+           rows parameter as a way of selecting geography.
+          schema:
+            type: string
+        - in: query
+          name: geotype
+          description: |
+            Geotype filters API results to a specific geography type. Can be single values or comma-separated array. 
+            At the moment these options are supported:
+            - LAD
+            - LSOA
+
+            Multiple geotype parameters can be supplied, e.g. geotype=LAD&geotype=LSOA
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
+          name: location
+          description: |
+            Radius and location (both are required) will select all geographies with radius of the long,lat pair location, 
+            e.g. location=0.1338,51.4635&radius=1000. Radius and location can be used instead of, or in combination with the rows parameter as a way of selecting geography.
+          schema:
+            type: string
+        - in: query
+          name: radius
+          description: |
+            Radius and location (both are required) will select all geographies with radius of the long,lat pair location, 
+            e.g. location=0.1338,51.4635&radius=1000. Radius and location can be used instead of, or in combination with the rows parameter as a way of selecting geography.
+          schema:
+            type: integer
+        - in: query
+          name: polygon
+          description: |
+            A sequence of long, lat coordinate pairs representing a closed polygon (NB - 'closed' means the first and last coordinate pair 
+            must be the same), e.g. polygon=0.0844,51.4897,0.1214,51.4910,0.1338,51.4635,0.1017,51.4647,0.0844,51.4897. This will select 
+            all geographies that lie within this polygon. polygon can be used instead of, or in combination with the rows parameter as a 
+            way of selecting geography.
+          schema:
+            type: string
+        - in: query
+          name: censustable
+          schema:
+            type: string
+      responses:
+        200:
+          content:
+            text/csv:
+        default:
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /geo/{year}:
+    get:
+      operationId: GetGeo
+      tags:
+        - public
+      summary: Get geographic info about an area. Queryable with either geocode or geoname (but not both)
+      parameters:
+        - in: path
+          name: year
+          description: |
+            Census year, Currently available:
+            - 2011
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: geocode
+          description: |
+            Geography code, eg E09000004
+          schema:
+            type: string
+        - in: query
+          name: geoname
+          description: |
+            Geography name, eg Bexley 
+          schema:
+            type: string
+      responses:
+        200:
+          content:
+            application/json:
+        default:
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error" 
+
+  /query2/{year}:
+    get:
+      operationId: GetQuery
+      tags:
+        - public
+      summary: List geocodes matching search conditions
+      parameters:
+        - in: path
+          name: year
+          description: |
+            Census year. Currently available:
+            - 2011
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: rows
+          description: |
+            [ONS codes](https://en.wikipedia.org/wiki/ONS_coding_system) for the geographies that you
+            want data for. Can be:
+            - single values (e.g. E01000001)
+            - comma-separated array of values (e.g E01000001,E01000002,E01000003)
+            - ellipsis-separated contiguous range of values (e.g. E01000001...E01000010)
+
+            Multiple rows parameters can be supplied, e.g. rows=E01000001&rows=E01000001...E01000010
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
+          name: cols
+          description: |
+            The census data that you want (NB - use metadata endpoint to see list of currently available census data). Can be:
+            - single values (e.g. QS101EW0001)
+            - comma-separated array of values (e.g QS101EW0001,QS101EW0002,QS101EW0003)
+            - ellipsis-separated contiguous range of values (e.g. QS101EW0001...QS101EW0010)
+
+            Multiple cols parameters can be supplied, e.g. cols=QS101EW0001&rows=QS101EW0001...QS101EW0010
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
+          name: bbox
+          description: |
+           Two long, lat coordinate pairs representing the opposite corners of a bounding box (e.g. bbox=0.1338,51.4635,0.1017,51.4647).
+           This will select all geographies that lie within this bounding box. Bbox can be used instead of, or in combination with the
+           rows parameter as a way of selecting geography.
+          schema:
+            type: string
+        - in: query
+          name: geotype
+          description: |
+            Geotype filters API results to a specific geography type. Can be single values or comma-separated array.
+            At the moment these options are supported:
+            - LAD
+            - LSOA
+
+            Multiple geotype parameters can be supplied, e.g. geotype=LAD&geotype=LSOA
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
+          name: location
+          description: |
+            Radius and location (both are required) will select all geographies with radius of the long,lat pair location,
+            e.g. location=0.1338,51.4635&radius=1000. Radius and location can be used instead of, or in combination with the rows parameter as a way of selecting geography.
+          schema:
+            type: string
+        - in: query
+          name: radius
+          description: |
+            Radius and location (both are required) will select all geographies with radius of the long,lat pair location,
+            e.g. location=0.1338,51.4635&radius=1000. Radius and location can be used instead of, or in combination with the rows parameter as a way of selecting geography.
+          schema:
+            type: integer
+        - in: query
+          name: polygon
+          description: |
+            A sequence of long, lat coordinate pairs representing a closed polygon (NB - 'closed' means the first and last coordinate pair
+            must be the same), e.g. polygon=0.0844,51.4897,0.1214,51.4910,0.1338,51.4635,0.1017,51.4647,0.0844,51.4897. This will select
+            all geographies that lie within this polygon. polygon can be used instead of, or in combination with the rows parameter as a
+            way of selecting geography.
+          schema:
+            type: string
+        - in: query
+          name: censustable
+          schema:
+            type: string
+      responses:
+        200:
+          content:
+            text/csv:
+        default:
+          description: internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /clear-cache:
+    get:
+      tags:
+        - private
+      summary: remove all entries from request cache
+      responses:
+        200:
+          description: empty response when cache cleared successfully
+          content:
+            text/plain:
+              schema:
+                type: string
+        default:
+          description: internal server error
+          content:
+            application/json:
+              schmea:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: error message
+          example: "could not say hello"
+
+    Health:
+      type: object
+      properties:
+        status:
+          type: string
+          description: "The status of the API"
+          enum: ["OK", "WARNING", "CRITICAL"]
+        version:
+          type: object
+          properties:
+            build_time:
+              type: string
+              description: "The build date and time of the API"
+              example: "2020-06-11T12:49:20+01:00"
+            git_commit:
+              type: string
+              description: "The git commit hash of the API"
+              example: "7c2febbf2b818175112478d4ffbadbee1b654f63"
+            language:
+              type: string
+              description: "The programming language used to implement API"
+              example: "go"
+            language_version:
+              type: string
+              description: "The version of the programming language used to implement API"
+              example: "go1.14.3"
+            version:
+              type: string
+              description: "The version of API"
+              example: "1.0.0"
+        uptime:
+          type: string
+          description: "The uptime of API"
+          example: "34516"
+        start_time:
+          type: string
+          description: "The start date and time of API running"
+          example: "2020-06-11T11:49:21.520922Z"
+        checks:
+          type: array
+          items:
+            $ref: '#/components/schemas/HealthChecker'
+
+    HealthChecker:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "The name of external service used by API"
+          enum: ["mongodb"]
+        status:
+          type: string
+          description: "The status of the external service"
+          enum: ["OK", "WARNING", "CRITICAL"]
+        message:
+          type: string
+          description: "The message status of the external service"
+          example: "mongodb is OK"
+        last_checked:
+          type: string
+          description: "The last health check date and time of the external service"
+          example: "2020-06-11T11:49:50.330089Z"
+        last_success:
+          type: string
+          description: "The last successful health check date and time of the external service"
+          example: "2020-06-11T11:49:50.330089Z"
+        last_failure:
+          type: string
+          description: "The last failed health check date and time of the external service"
+          example: "2019-09-22T11:48:51.0000001Z"
+
+
+    MetadataResponse:
+      type: array
+      items: 
+        $ref: '#/components/schemas/Metadata'
+       
+    Metadata:
+      type: object
+      properties: 
+        code:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        tables:
+          $ref: '#/components/schemas/Tables'
+
+    Categories:
+      type: array
+      items: 
+        $ref: '#/components/schemas/Triplet'
+       
+    Triplet:
+      type: object
+      properties: 
+        code:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+       
+    Tables:
+      type: array
+      items: 
+        $ref: '#/components/schemas/Table'
+
+    Table:
+      type: object
+      properties: 
+        code:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        categories: 
+          $ref: '#/components/schemas/Categories'
+        total:
+          description: |
+            Optional. If filtertotals=true, totals column for each table will be removed from 'categories' array and returned seperately here.
+            Otherwise totals column is included in 'categories' array, and 'total' will not be included in response.
+          $ref: '#/components/schemas/Triplet'

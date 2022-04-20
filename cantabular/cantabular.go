@@ -1,0 +1,431 @@
+package cantabular
+
+import (
+	"context"
+	"encoding/csv"
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	"reflect"
+	"strings"
+
+	"github.com/ONSdigital/dp-healthcheck/healthcheck"
+	"github.com/shurcooL/graphql"
+)
+
+const URL = "https://ftb-api-ext.ons.sensiblecode.io/graphql"
+
+//const URL = "http://127.0.0.1:8080"
+
+type Client struct {
+	url    string // graphql server we are querying
+	client *graphql.Client
+}
+
+type AuthTripper struct {
+	User string
+	Pass string
+}
+
+func (at AuthTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.SetBasicAuth(at.User, at.Pass)
+	return http.DefaultTransport.RoundTrip(req)
+}
+
+// list datasets
+type DataSets struct {
+	Datasets []struct{ Name graphql.String }
+}
+
+type IntValues []graphql.Int
+
+type Pairs []struct {
+	Code  graphql.String
+	Label graphql.String
+}
+
+type VariableCodes struct {
+	Dataset struct {
+		Variables struct {
+			Edges []struct {
+				Node struct {
+					Name  graphql.String
+					Label graphql.String
+				}
+			}
+		}
+	} `graphql:"dataset(name: $ds)"`
+}
+
+type ClassCodes struct { // rename
+	Dataset struct {
+		Table struct {
+			Dimensions []struct {
+				Categories Pairs
+			}
+		} `graphql:"table(variables: [$vars])"`
+	} `graphql:"dataset(name: $ds)"`
+}
+
+type Metric struct {
+	Dataset struct {
+		Table struct {
+			Dimensions []struct {
+				Categories Pairs
+			}
+			Values IntValues
+		} `graphql:"table(variables: [$geotype,$var])"`
+	} `graphql:"dataset(name: $ds)"`
+}
+
+type MetricFilter struct {
+	Dataset struct {
+		Table struct {
+			Dimensions []struct {
+				Categories Pairs
+			}
+			Values IntValues
+		} `graphql:"table(variables: [$geotype,$var],filters: [{variable: $geotype, codes: $geos}])"`
+	} `graphql:"dataset(name: $ds)"`
+}
+
+// Metadata is a slow, tactical solution
+type Metadata struct {
+	Code       string
+	Name       string
+	Categories []struct {
+		Code string
+		Name string
+	} `json:"categories"`
+}
+
+// New returns a reusable Client to be used for Metric and Metadata queries.
+func New(url, user, pass string) *Client {
+	hclient := &http.Client{
+		Transport: AuthTripper{
+			User: user,
+			Pass: pass,
+		},
+	}
+	client := graphql.NewClient(url, hclient)
+	return &Client{
+		url:    url,
+		client: client,
+	}
+}
+
+/*
+{ dataset(name: "Usual-Residents") {
+    table(
+      variables: ["COUNTRY", "HLQPUK11_T007A"]
+      filters: [{variable: "COUNTRY", codes: ["synE92000001"]}]
+    ) {
+      dimensions {
+        categories {
+          label
+          code
+        }
+      }
+      values
+      error
+    }
+  }
+}
+*/
+// MetricFilter is a cli type query1
+// could be entrypoint for REST endpoint
+func (cant *Client) QueryMetricFilter(ctx context.Context, ds, geo, geoType, code string) (geoq, catsQL Pairs, values IntValues, err error) {
+	geos := strings.Split(geo, ",")
+
+	if ds == "" {
+		ds = GetDataSet(code)
+	}
+
+	// 2011 cantabular geocodes have syn appended to the front
+	var geosQL []graphql.String
+	for _, v := range geos {
+		geosQL = append(geosQL, graphql.String("syn"+v))
+	}
+
+	var query MetricFilter
+
+	vars := map[string]interface{}{
+		"ds":      graphql.String(ds),
+		"geos":    geosQL,
+		"geotype": graphql.String(GeoTypeMap()[geoType]),
+		"var":     graphql.String(ShortVarMap()[code]),
+	}
+
+	if err = cant.SendQueryVars(ctx, &query, vars); err != nil {
+		return nil, nil, nil, err
+	}
+
+	geoq = query.Dataset.Table.Dimensions[0].Categories
+	catsQL = query.Dataset.Table.Dimensions[1].Categories
+	values = query.Dataset.Table.Values
+
+	return geoq, catsQL, values, nil
+}
+
+/*
+{ dataset(name: "Usual-Residents") {
+    table(
+      variables: ["LA", "HLQPUK11_T007A"]
+    ) {
+      dimensions {
+        categories {
+          label
+          code
+        }
+      }
+      values
+      error
+    }
+  }
+}
+*/
+// QueryMetric is is a cli query2
+// could be entrypoint for REST endpoint
+func (cant *Client) QueryMetric(ctx context.Context, ds, geoType, code string) (geoq, catsQL Pairs, values IntValues, err error) {
+	if ds == "" {
+		ds = GetDataSet(code)
+	}
+
+	vars := map[string]interface{}{
+		"ds":      graphql.String(ds),
+		"geotype": graphql.String(GeoTypeMap()[geoType]),
+		"var":     graphql.String(ShortVarMap()[code]),
+	}
+
+	var query Metric
+	if err = cant.SendQueryVars(ctx, &query, vars); err != nil {
+		return nil, nil, nil, err
+	}
+
+	geoq = query.Dataset.Table.Dimensions[0].Categories
+	catsQL = query.Dataset.Table.Dimensions[1].Categories
+	values = query.Dataset.Table.Values
+
+	return geoq, catsQL, values, nil
+}
+
+// QueryMetaData does some multiple data queries to get data structure
+// XXX a poor work around for a lack of metadata.
+
+func (cant *Client) QueryMetaData(ctx context.Context, ds string, nomis bool) (string, error) {
+	if ds == "" {
+		ds = GetDataSet("")
+	}
+
+	revMap := make(map[string]string)
+	for k, v := range ShortVarMap() {
+		revMap[v] = k
+
+	}
+
+	var query VariableCodes
+	vars := map[string]interface{}{
+		"ds": graphql.String(ds),
+	}
+	if err := cant.SendQueryVars(ctx, &query, vars); err != nil {
+		return "", err
+	}
+
+	var metadata []Metadata
+
+	for _, v := range query.Dataset.Variables.Edges {
+		if revMap[string(v.Node.Name)] == "" {
+			continue
+		}
+
+		var name string
+		if nomis {
+			name = revMap[string(v.Node.Name)]
+		} else {
+			name = string(v.Node.Name)
+
+		}
+		md := Metadata{
+			Code: name,
+			//Code: string(v.Node.Name),
+			Name: string(v.Node.Label),
+		}
+		var query2 ClassCodes
+		vars := map[string]interface{}{
+			"ds":   graphql.String(ds),
+			"vars": graphql.String(v.Node.Name),
+		}
+		if err := cant.SendQueryVars(ctx, &query2, vars); err != nil {
+			return "", err
+		}
+		for _, v2 := range query2.Dataset.Table.Dimensions {
+			for _, v3 := range v2.Categories { // XXX not ordered!
+				md.Categories = append(md.Categories, struct {
+					Code string
+					Name string
+				}{Code: string(v3.Code), Name: string(v3.Label)})
+
+			}
+		}
+
+		metadata = append(metadata, md)
+
+	}
+
+	bs, err := json.Marshal(metadata)
+	if err != nil {
+		return "", nil
+	}
+
+	return string(bs), nil
+}
+
+func (cant *Client) SendQueryVars(ctx context.Context, query interface{}, vars map[string]interface{}) error {
+	return cant.client.Query(ctx, query, vars)
+}
+
+// ParseResp is used for the command line investigate API commands
+// probably doesn't make sense for REST API
+func ParseResp(query interface{}) {
+	// wish there were a better way!
+	qt := reflect.TypeOf(query).String()
+	switch qt {
+	// these help with looking at data in the API
+	case "*cantabular.DataSets":
+		ds := query.(*DataSets)
+		for _, v := range ds.Datasets {
+			fmt.Println(v.Name)
+		}
+	case "*cantabular.VariableCodes":
+		scodes := query.(*VariableCodes)
+		for _, v := range scodes.Dataset.Variables.Edges {
+			fmt.Print(v.Node.Name + " : ")
+			fmt.Println(v.Node.Label)
+		}
+	case "*cantabular.ClassCodes":
+		scodes := query.(*ClassCodes)
+		for _, v := range scodes.Dataset.Table.Dimensions {
+			for _, v2 := range v.Categories {
+				fmt.Print(v2.Code + " = ")
+				fmt.Println(v2.Label)
+			}
+		}
+
+	default:
+		log.Fatal(qt + " unrecognised")
+	}
+
+}
+
+func ParseMetric(geo, cats Pairs, values IntValues) string {
+	first := []string{"cantabular"}
+	second := []string{"geography_code"}
+
+	var b strings.Builder
+	w := csv.NewWriter(&b)
+
+	for _, k := range cats {
+		first = append(first, string(k.Label))
+		second = append(second, string(k.Code))
+	}
+
+	w.Write(first)
+	w.Write(second)
+
+	k := 0
+	for _, g := range geo {
+		geo := strings.Split(string(g.Code), "syn")[1]
+		line := []string{geo}
+
+		for j := 0; j < len(cats); j++ {
+			line = append(line, fmt.Sprintf("%d", values[k]))
+			k++
+		}
+		w.Write(line)
+	}
+
+	w.Flush()
+
+	return b.String()
+}
+
+func GeoTypeMap() map[string]string {
+
+	return map[string]string{
+		"Country": "Country",
+		"Region":  "Region",
+		"LAD":     "LA",
+		"MSOA":    "MSOA",
+	}
+}
+
+func ShortVarMap() map[string]string {
+	// "matching" via command output and eg.
+	// SELECT  nd.name,nc.* FROM nomis_desc nd, nomis_category nc where nd.short_nomis_code='KS103EW' and nd.id=nc.nomis_desc_id and nc.measurement_unit='Count' and nc.long_nomis_code not like '%0001';
+
+	// these are syn2011 "keys" which we pretend, temporarily, are NOMIS short codes
+	return map[string]string{
+		"KS102EW": "AGE_T009A",
+		"KS103EW": "MARSTAT_T006A",
+		"KS202EW": "NATID_ALL_T009A",
+		"KS206EW": "WELSHPUK112_T007A",
+		"KS207WA": "WELSHPUK112_R003A",
+		"KS208WA": "WELSHPUK112_R003A",
+		"QS101EW": "RESIDTYPE",
+		"QS104EW": "SEX",
+		"QS201EW": "ETHPUK11_T009A",
+		"QS203EW": "COB_R010A",
+		"QS208EW": "RELIGIONEW",
+		"QS301EW": "CARER",
+		"QS302EW": "HEALTH_T004A", // HEALTH
+		"QS303EW": "DISABILITY_T003B",
+		"QS402EW": "TYPACCOM_T009A",
+		"QS403EW": "TENHUK11_T010A",
+		"QS406EW": "SIZHUK11_T007A",
+		"QS415EW": "CENHEATHUK11_T003A",
+		"QS416EW": "CARSNO_T004A",
+		"QS501EW": "HLQPUK11_T007A", // EDUCATION
+		"QS601EW": "ECOPUK11_R006A",
+		"QS604EW": "HOURS",
+		"QS605EW": "INDGPUK11_T009A",
+		"QS606EW": "OCCPUK113_T010A",
+		"QS701EW": "TRANSPORT_R005A",
+		"QS702EW": "AGGDTWPEW11_R010A",
+	}
+
+}
+
+//  GetDataSet maps variable code to dataset
+func GetDataSet(varCode string) string {
+
+	mappy := map[string]string{
+		"QS403EW": "People-Households",
+		"QS406EW": "People-Households",
+		"KS206EW": "People-Households",
+		"QS402EW": "People-Households",
+		"QS416EW": "People-Households",
+		"QS415EW": "People-Households",
+	}
+
+	if mappy[varCode] != "" {
+		return mappy[varCode]
+	}
+
+	return "Usual-Residents"
+}
+
+func (cant *Client) Checker(ctx context.Context, state *healthcheck.CheckState) error {
+	// any basic query can work as a health check
+	var query struct {
+		Typename graphql.String `graphql:"__typename"`
+	}
+
+	err := cant.SendQueryVars(ctx, &query, nil)
+	if err != nil {
+		state.Update(healthcheck.StatusCritical, err.Error(), 0)
+		return nil
+	}
+	state.Update(healthcheck.StatusOK, "cantabular healthy", 0)
+	return nil
+}
