@@ -1,5 +1,5 @@
 # dp-geodata-api
-API for querying census data + metadata by geography (named geographies or various coordinate-based queries)
+Census Atlas geodata API and database.
 
 ### Further Docs
 
