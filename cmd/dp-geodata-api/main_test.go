@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	componenttest "github.com/ONSdigital/dp-component-test"
-	"github.com/ONSdigital/dp-find-insights-poc-api/features/steps"
+	"github.com/ONSdigital/dp-geodata-api/features/steps"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 )

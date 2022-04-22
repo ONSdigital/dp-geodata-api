@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/sentinel"
+	"github.com/ONSdigital/dp-geodata-api/sentinel"
 	"github.com/lib/pq"
 	"github.com/twpayne/go-geom/encoding/geojson"
 	"github.com/twpayne/go-geom/encoding/wkt"

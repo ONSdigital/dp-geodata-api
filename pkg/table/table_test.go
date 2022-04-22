@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/pkg/table"
+	"github.com/ONSdigital/dp-geodata-api/pkg/table"
 )
 
 func TestGenerate(t *testing.T) {

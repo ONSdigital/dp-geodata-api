@@ -9,7 +9,7 @@ image_resource:
     tag: 1.17.6
 
 inputs:
-  - name: dp-find-insights-poc-api
+  - name: dp-geodata-api
 
 outputs:
   - name: build
@@ -18,4 +18,4 @@ caches:
   - path: go/
 
 run:
-  path: dp-find-insights-poc-api/ci/scripts/build.sh
+  path: dp-geodata-api/ci/scripts/build.sh

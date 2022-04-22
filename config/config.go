@@ -6,7 +6,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-// Config represents service configuration for dp-find-insights-poc-api
+// Config represents service configuration for dp-geodata-api
 type Config struct {
 	BindAddr                   string        `envconfig:"BIND_ADDR"`
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`

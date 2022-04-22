@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/model"
-	"github.com/ONSdigital/dp-find-insights-poc-api/pkg/database"
+	"github.com/ONSdigital/dp-geodata-api/model"
+	"github.com/ONSdigital/dp-geodata-api/pkg/database"
 	"github.com/spf13/cast"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

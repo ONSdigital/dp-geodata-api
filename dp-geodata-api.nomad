@@ -1,4 +1,4 @@
-job "dp-find-insights-poc-api" {
+job "dp-geodata-api" {
   datacenters = ["eu-west-1"]
   region      = "eu"
   type        = "service"
@@ -26,24 +26,24 @@ job "dp-find-insights-poc-api" {
       mode     = "delay"
     }
 
-    task "dp-find-insights-poc-api-web" {
+    task "dp-geodata-api-web" {
       driver = "docker"
 
       artifact {
-        source = "s3::https://s3-eu-west-1.amazonaws.com/{{DEPLOYMENT_BUCKET}}/dp-find-insights-poc-api/{{PROFILE}}/{{RELEASE}}.tar.gz"
+        source = "s3::https://s3-eu-west-1.amazonaws.com/{{DEPLOYMENT_BUCKET}}/dp-geodata-api/{{PROFILE}}/{{RELEASE}}.tar.gz"
       }
 
       config {
         command = "${NOMAD_TASK_DIR}/start-task"
 
-        args = ["./dp-find-insights-poc-api"]
+        args = ["./dp-geodata-api"]
 
         image = "{{ECR_URL}}:concourse-{{REVISION}}"
 
       }
 
       service {
-        name = "dp-find-insights-poc-api"
+        name = "dp-geodata-api"
         port = "http"
         tags = ["web"]
 
@@ -70,7 +70,7 @@ job "dp-find-insights-poc-api" {
       }
 
       vault {
-        policies = ["dp-find-insights-poc-api-web"]
+        policies = ["dp-geodata-api-web"]
       }
     }
   }
@@ -90,23 +90,23 @@ job "dp-find-insights-poc-api" {
       mode     = "delay"
     }
 
-    task "dp-find-insights-poc-api-publishing" {
+    task "dp-geodata-api-publishing" {
       driver = "docker"
 
       artifact {
-        source = "s3::https://s3-eu-west-1.amazonaws.com/{{DEPLOYMENT_BUCKET}}/dp-find-insights-poc-api/{{PROFILE}}/{{RELEASE}}.tar.gz"
+        source = "s3::https://s3-eu-west-1.amazonaws.com/{{DEPLOYMENT_BUCKET}}/dp-geodata-api/{{PROFILE}}/{{RELEASE}}.tar.gz"
       }
 
       config {
         command = "${NOMAD_TASK_DIR}/start-task"
 
-        args = ["./dp-find-insights-poc-api"]
+        args = ["./dp-geodata-api"]
 
         image = "{{ECR_URL}}:concourse-{{REVISION}}"
       }
 
       service {
-        name = "dp-find-insights-poc-api"
+        name = "dp-geodata-api"
         port = "http"
         tags = ["publishing"]
 
@@ -133,7 +133,7 @@ job "dp-find-insights-poc-api" {
       }
 
       vault {
-        policies = ["dp-find-insights-poc-api-publishing"]
+        policies = ["dp-geodata-api-publishing"]
       }
     }
   }

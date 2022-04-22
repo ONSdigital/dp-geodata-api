@@ -124,14 +124,14 @@ You can build the API image without a local Go compiler:
 
     make image
 
-The image is named `dp-find-insights-poc-api:latest`.
+The image is named `dp-geodata-api:latest`.
 
 You can also build an API binary to run as a local process.
 This requires a Go compiler.
 
     make build
 
-The binary is `build/dp-find-insights-poc-api`.
+The binary is `build/dp-geodata-api`.
 
 # <a id="running-the-api"></a> Running the API #
 

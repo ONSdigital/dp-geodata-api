@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/api"
+	"github.com/ONSdigital/dp-geodata-api/api"
 )
 
 func (svr *Server) GetGeo(w http.ResponseWriter, r *http.Request, year int, params api.GetGeoParams) {

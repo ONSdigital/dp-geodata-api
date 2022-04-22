@@ -8,8 +8,8 @@ image_resource:
     tag: latest
 
 inputs:
-  - name: dp-find-insights-poc-api
-    path: dp-find-insights-poc-api
+  - name: dp-geodata-api
+    path: dp-geodata-api
 
 run:
-  path: dp-find-insights-poc-api/ci/scripts/audit.sh
+  path: dp-geodata-api/ci/scripts/audit.sh

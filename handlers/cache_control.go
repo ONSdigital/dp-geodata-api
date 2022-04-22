@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/cache"
-	"github.com/ONSdigital/dp-find-insights-poc-api/sentinel"
+	"github.com/ONSdigital/dp-geodata-api/cache"
+	"github.com/ONSdigital/dp-geodata-api/sentinel"
 	"github.com/ONSdigital/log.go/v2/log"
 )
 

@@ -12,10 +12,10 @@ import (
 	"github.com/kylelemons/godebug/diff"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/pkg/geodata"
-	"github.com/ONSdigital/dp-find-insights-poc-api/pkg/table"
-	"github.com/ONSdigital/dp-find-insights-poc-api/pkg/where"
-	"github.com/ONSdigital/dp-find-insights-poc-api/sentinel"
+	"github.com/ONSdigital/dp-geodata-api/pkg/geodata"
+	"github.com/ONSdigital/dp-geodata-api/pkg/table"
+	"github.com/ONSdigital/dp-geodata-api/pkg/where"
+	"github.com/ONSdigital/dp-geodata-api/sentinel"
 )
 
 func TestGetCensusQuery(t *testing.T) {

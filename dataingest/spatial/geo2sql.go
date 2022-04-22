@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/dataingest/spatial/table"
+	"github.com/ONSdigital/dp-geodata-api/dataingest/spatial/table"
 	"github.com/twpayne/go-geom/encoding/geojson"
 )
 

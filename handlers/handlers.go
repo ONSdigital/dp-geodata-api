@@ -7,13 +7,13 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/api"
-	"github.com/ONSdigital/dp-find-insights-poc-api/cache"
-	"github.com/ONSdigital/dp-find-insights-poc-api/config"
-	"github.com/ONSdigital/dp-find-insights-poc-api/metadata"
-	"github.com/ONSdigital/dp-find-insights-poc-api/pkg/geodata"
-	"github.com/ONSdigital/dp-find-insights-poc-api/postcode"
-	Swagger "github.com/ONSdigital/dp-find-insights-poc-api/swagger"
+	"github.com/ONSdigital/dp-geodata-api/api"
+	"github.com/ONSdigital/dp-geodata-api/cache"
+	"github.com/ONSdigital/dp-geodata-api/config"
+	"github.com/ONSdigital/dp-geodata-api/metadata"
+	"github.com/ONSdigital/dp-geodata-api/pkg/geodata"
+	"github.com/ONSdigital/dp-geodata-api/postcode"
+	Swagger "github.com/ONSdigital/dp-geodata-api/swagger"
 	"github.com/ONSdigital/log.go/v2/log"
 )
 

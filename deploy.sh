@@ -1,8 +1,8 @@
 #! /bin/sh
 
-service=dp-find-insights-poc-api
+service=dp-geodata-api
 
-binary=dp-find-insights-poc-api
+binary=dp-geodata-api
 dir=/home/ubuntu
 
 current="$dir/$binary"

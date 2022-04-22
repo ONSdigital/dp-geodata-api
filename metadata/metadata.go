@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/api"
-	"github.com/ONSdigital/dp-find-insights-poc-api/model"
-	"github.com/ONSdigital/dp-find-insights-poc-api/pkg/database"
+	"github.com/ONSdigital/dp-geodata-api/api"
+	"github.com/ONSdigital/dp-geodata-api/model"
+	"github.com/ONSdigital/dp-geodata-api/pkg/database"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gosimple/slug"

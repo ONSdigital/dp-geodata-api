@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/pkg/timer"
+	"github.com/ONSdigital/dp-geodata-api/pkg/timer"
 )
 
 // Proposed replacement for Query.

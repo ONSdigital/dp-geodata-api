@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/pkg/timer"
-	"github.com/ONSdigital/dp-find-insights-poc-api/pkg/where"
-	"github.com/ONSdigital/dp-find-insights-poc-api/sentinel"
+	"github.com/ONSdigital/dp-geodata-api/pkg/timer"
+	"github.com/ONSdigital/dp-geodata-api/pkg/where"
+	"github.com/ONSdigital/dp-geodata-api/sentinel"
 	"github.com/jtrim-ons/ckmeans/pkg/ckmeans"
 )
 

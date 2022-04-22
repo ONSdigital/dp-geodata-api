@@ -5,13 +5,13 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/config"
-	"github.com/ONSdigital/dp-find-insights-poc-api/service"
+	"github.com/ONSdigital/dp-geodata-api/config"
+	"github.com/ONSdigital/dp-geodata-api/service"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/pkg/errors"
 )
 
-const serviceName = "dp-find-insights-poc-api"
+const serviceName = "dp-geodata-api"
 
 var (
 	// BuildTime represents the time in which the service was built
@@ -47,7 +47,7 @@ func run(ctx context.Context) error {
 	svcErrors := make(chan error, 1)
 	svcList := service.NewServiceList(&service.Init{})
 
-	log.Info(ctx, "dp-find-insights-poc-api version", log.Data{"version": Version})
+	log.Info(ctx, "dp-geodata-api version", log.Data{"version": Version})
 
 	// Read config
 	cfg, err := config.Get()

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/sentinel"
+	"github.com/ONSdigital/dp-geodata-api/sentinel"
 )
 
 // ParseMultiArgs generates a ValueSet from multi value query parameters.

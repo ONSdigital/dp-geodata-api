@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/sentinel"
+	"github.com/ONSdigital/dp-geodata-api/sentinel"
 	"github.com/stretchr/testify/assert"
 )
 

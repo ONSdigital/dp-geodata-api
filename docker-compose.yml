@@ -5,7 +5,7 @@ services:
     build:
       dockerfile: Dockerfile.api
       context: .
-    image: dp-find-insights-poc-api:latest
+    image: dp-geodata-api:latest
 
     # These defaults are for the local container postgres.
     # To use a different postgres instance, either set PG

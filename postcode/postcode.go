@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/model"
-	"github.com/ONSdigital/dp-find-insights-poc-api/sentinel"
+	"github.com/ONSdigital/dp-geodata-api/model"
+	"github.com/ONSdigital/dp-geodata-api/sentinel"
 	"gorm.io/gorm"
 )
 

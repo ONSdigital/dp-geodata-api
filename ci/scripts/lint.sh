@@ -1,5 +1,5 @@
 #!/bin/bash -eux
 
-pushd dp-find-insights-poc-api
+pushd dp-geodata-api
   make lint
 popd

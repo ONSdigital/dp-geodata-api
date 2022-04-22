@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/pkg/database"
+	"github.com/ONSdigital/dp-geodata-api/pkg/database"
 	"github.com/jackc/pgx/v4"
 )
 

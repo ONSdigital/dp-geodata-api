@@ -11,9 +11,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/comptests"
-	"github.com/ONSdigital/dp-find-insights-poc-api/pkg/database"
-	"github.com/ONSdigital/dp-find-insights-poc-api/sentinel"
+	"github.com/ONSdigital/dp-geodata-api/comptests"
+	"github.com/ONSdigital/dp-geodata-api/pkg/database"
+	"github.com/ONSdigital/dp-geodata-api/sentinel"
 )
 
 // ---------------------------------------------------- Helpers ----------------------------------------------------- //

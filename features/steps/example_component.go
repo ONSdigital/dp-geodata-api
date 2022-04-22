@@ -4,9 +4,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/config"
-	"github.com/ONSdigital/dp-find-insights-poc-api/service"
-	"github.com/ONSdigital/dp-find-insights-poc-api/service/mock"
+	"github.com/ONSdigital/dp-geodata-api/config"
+	"github.com/ONSdigital/dp-geodata-api/service"
+	"github.com/ONSdigital/dp-geodata-api/service/mock"
 
 	componenttest "github.com/ONSdigital/dp-component-test"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"

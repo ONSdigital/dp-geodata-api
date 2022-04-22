@@ -10,8 +10,8 @@ import (
 	"log"
 	"testing"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/comptests"
-	"github.com/ONSdigital/dp-find-insights-poc-api/model"
+	"github.com/ONSdigital/dp-geodata-api/comptests"
+	"github.com/ONSdigital/dp-geodata-api/model"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"gorm.io/driver/postgres"
