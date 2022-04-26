@@ -59,6 +59,10 @@ cover:	## aggregate coverage hat tip @efragkiadaki
 	@awk 'BEGIN {cov=0; stat=0;} $$3!="" { cov+=($$3==1?$$2:0); stat+=$$2; } END {printf("Total coverage: %.2f%% of statements\n", (cov/stat)*100);}' coverage.out
 	@go tool cover -html=coverage.out
 
+.PHONY: test-component
+test-component:	## blank target (for now) to satisfy CI
+	exit
+
 .PHONY: test-integration
 test-integration:	## integration tests needs web server
 	go test -count=1 ./inttests -tags=integration
