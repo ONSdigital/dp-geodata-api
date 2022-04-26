@@ -1,6 +1,6 @@
 #!/bin/bash -eux
 
-pushd dp-find-insights-poc-api
+pushd dp-geodata-api
   make build
-  cp build/dp-find-insights-poc-api Dockerfile.concourse ../build
+  cp build/dp-geodata-api Dockerfile.concourse ../build
 popd

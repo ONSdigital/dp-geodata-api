@@ -7,8 +7,8 @@ import (
 	"log"
 	"testing"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/comptests"
-	"github.com/ONSdigital/dp-find-insights-poc-api/model"
+	"github.com/ONSdigital/dp-geodata-api/comptests"
+	"github.com/ONSdigital/dp-geodata-api/model"
 	"github.com/jackc/pgx/v4"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

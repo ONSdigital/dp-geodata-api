@@ -3,7 +3,7 @@ package geobb
 import (
 	"testing"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/pkg/database"
+	"github.com/ONSdigital/dp-geodata-api/pkg/database"
 	"github.com/cockroachdb/copyist"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

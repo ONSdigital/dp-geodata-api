@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/api"
-	"github.com/ONSdigital/dp-find-insights-poc-api/pkg/geodata"
-	"github.com/ONSdigital/dp-find-insights-poc-api/pkg/table"
-	"github.com/ONSdigital/dp-find-insights-poc-api/pkg/where"
-	"github.com/ONSdigital/dp-find-insights-poc-api/sentinel"
+	"github.com/ONSdigital/dp-geodata-api/api"
+	"github.com/ONSdigital/dp-geodata-api/pkg/geodata"
+	"github.com/ONSdigital/dp-geodata-api/pkg/table"
+	"github.com/ONSdigital/dp-geodata-api/pkg/where"
+	"github.com/ONSdigital/dp-geodata-api/sentinel"
 )
 
 func (svr *Server) GetQuery(w http.ResponseWriter, r *http.Request, year int, params api.GetQueryParams) {

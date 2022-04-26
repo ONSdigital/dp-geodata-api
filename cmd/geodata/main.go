@@ -9,10 +9,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/cantabular"
-	"github.com/ONSdigital/dp-find-insights-poc-api/metadata"
-	"github.com/ONSdigital/dp-find-insights-poc-api/pkg/database"
-	geodata "github.com/ONSdigital/dp-find-insights-poc-api/pkg/geodata"
+	"github.com/ONSdigital/dp-geodata-api/cantabular"
+	"github.com/ONSdigital/dp-geodata-api/metadata"
+	"github.com/ONSdigital/dp-geodata-api/pkg/database"
+	geodata "github.com/ONSdigital/dp-geodata-api/pkg/geodata"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

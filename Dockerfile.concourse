@@ -2,6 +2,6 @@ FROM onsdigital/dp-concourse-tools-ubuntu
 
 WORKDIR /app/
 
-COPY dp-find-insights-poc-api .
+COPY dp-geodata-api .
 
-CMD ./dp-find-insights-poc-api
+CMD ./dp-geodata-api

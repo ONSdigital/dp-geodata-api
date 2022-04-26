@@ -10,10 +10,10 @@ import (
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/config"
-	"github.com/ONSdigital/dp-find-insights-poc-api/service"
+	"github.com/ONSdigital/dp-geodata-api/config"
+	"github.com/ONSdigital/dp-geodata-api/service"
 
-	serviceMock "github.com/ONSdigital/dp-find-insights-poc-api/service/mock"
+	serviceMock "github.com/ONSdigital/dp-geodata-api/service/mock"
 
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"

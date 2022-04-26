@@ -19,4 +19,4 @@ ENV BIND_ADDR=0.0.0.0:12550
 
 EXPOSE 12550
 
-CMD ["/go/src/app/build/dp-find-insights-poc-api"]
+CMD ["/go/src/app/build/dp-geodata-api"]

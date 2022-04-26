@@ -7,8 +7,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/model"
-	"github.com/ONSdigital/dp-find-insights-poc-api/pkg/database"
+	"github.com/ONSdigital/dp-geodata-api/model"
+	"github.com/ONSdigital/dp-geodata-api/pkg/database"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

@@ -15,9 +15,9 @@ When this happens, the hostnames in the following locations must be updated:
 
 * this doc
 * [Makefile](./Makefile)
-* the systemd environment for the dp-find-insights-poc-api service (see below)
+* the systemd environment for the dp-geodata-api service (see below)
 
-dp-find-insights-poc-api is running under systemd as the `ubuntu` user, using the
+dp-geodata-api is running under systemd as the `ubuntu` user, using the
 environment for config.
 
 TODO: these instances have been provisioned manually; we should use terraform
@@ -86,15 +86,15 @@ If tests do not pass, you can rollback to the previous version:
 ## Log monitoring
 
         make ssh-dev
-        journalctl -fu dp-find-insights-poc-api
+        journalctl -fu dp-geodata-api
 
 ### SERVICE SETUP
 
 ## Systemd service
 
-/etc/systemd/system/dp-find-insights-poc-api.service
+/etc/systemd/system/dp-geodata-api.service
 
-added via `systemctl enable dp-find-insights-poc-api`
+added via `systemctl enable dp-geodata-api`
 
 ```
 [Unit]Description=Find Insights APIWants=network-online.target
@@ -102,17 +102,17 @@ After=network-online.target
 
 [Service]
 Type=simple
-User=ubuntuSyslogIdentifier=dp-find-insights-poc-api
-ExecStart=/home/ubuntu/dp-find-insights-poc-api
+User=ubuntuSyslogIdentifier=dp-geodata-api
+ExecStart=/home/ubuntu/dp-geodata-api
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-Environment added via `systemctl edit dp-find-insights-poc-api`
+Environment added via `systemctl edit dp-geodata-api`
 
-/etc/systemd/system/dp-find-insights-poc-api.service.d/override.conf
+/etc/systemd/system/dp-geodata-api.service.d/override.conf
 
 ```
 [Service]

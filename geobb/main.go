@@ -6,7 +6,7 @@ import (
 	"log"
 	"math"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/model"
+	"github.com/ONSdigital/dp-geodata-api/model"
 	"github.com/twpayne/go-geom/encoding/ewkbhex"
 	"gorm.io/gorm"
 )

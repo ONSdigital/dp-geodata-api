@@ -5,7 +5,7 @@ package mock
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-find-insights-poc-api/service"
+	"github.com/ONSdigital/dp-geodata-api/service"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"net/http"
 	"sync"

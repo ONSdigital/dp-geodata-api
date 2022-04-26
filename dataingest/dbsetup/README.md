@@ -48,7 +48,7 @@ make ssh-int
 sudo to root and
 
 ```
-systemctl stop dp-find-insights-poc-api.service
+systemctl stop dp-geodata-api.service
 ```
 
 Then into another terminal connected to the live db
@@ -60,8 +60,8 @@ alter database census_new rename to census;
 Back to the SSH server.
 
 ```
-systemctl start dp-find-insights-poc-api.service
-systemctl status dp-find-insights-poc-api.service -l
+systemctl start dp-geodata-api.service
+systemctl status dp-geodata-api.service -l
 
 ```
 

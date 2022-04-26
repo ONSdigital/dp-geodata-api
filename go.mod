@@ -1,4 +1,4 @@
-module github.com/ONSdigital/dp-find-insights-poc-api
+module github.com/ONSdigital/dp-geodata-api
 
 go 1.17
 

@@ -13,8 +13,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/model"
-	"github.com/ONSdigital/dp-find-insights-poc-api/pkg/database"
+	"github.com/ONSdigital/dp-geodata-api/model"
+	"github.com/ONSdigital/dp-geodata-api/pkg/database"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/jszwec/csvutil"

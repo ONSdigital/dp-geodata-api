@@ -4,7 +4,7 @@ on:
   schedule:
     - cron: '20 4 * * *'
 jobs:
-  test:
+  nightly_integration_test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Develop Branch

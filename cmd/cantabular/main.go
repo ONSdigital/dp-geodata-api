@@ -9,7 +9,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/ONSdigital/dp-find-insights-poc-api/cantabular"
+	"github.com/ONSdigital/dp-geodata-api/cantabular"
 	"github.com/shurcooL/graphql"
 )
 
