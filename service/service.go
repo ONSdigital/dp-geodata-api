@@ -3,7 +3,9 @@ package service
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/ONSdigital/dp-api-clients-go/middleware"
@@ -134,11 +136,32 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return http.TimeoutHandler(h, cfg.WriteTimeout, "operation timed out\n")
 	}
 
+	stripOptionalPrefix := func(h http.Handler) http.Handler {
+		prefix := "/v1/geodata"
+		strip := func(w http.ResponseWriter, r *http.Request) {
+			p := strings.TrimPrefix(r.URL.Path, prefix)
+			rp := strings.TrimPrefix(r.URL.RawPath, prefix)
+			if len(p) < len(r.URL.Path) && (r.URL.RawPath == "" || len(rp) < len(r.URL.RawPath)) {
+				r2 := new(http.Request)
+				*r2 = *r
+				r2.URL = new(url.URL)
+				*r2.URL = *r.URL
+				r2.URL.Path = p
+				r2.URL.RawPath = rp
+				h.ServeHTTP(w, r2)
+			} else {
+				h.ServeHTTP(w, r)
+			}
+		}
+		return http.HandlerFunc(strip)
+	}
+
 	// build handler chain
 	chain := alice.New(
 		clientInfo,
 		middleware.Whitelist(middleware.HealthcheckFilter(hc.Handler)),
 		timeoutHandler,
+		stripOptionalPrefix,
 	).Then(api.Handler(a))
 
 	// bind router handler to http server
