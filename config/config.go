@@ -22,6 +22,7 @@ type Config struct {
 	EnableCantabular           bool          `envconfig:"ENABLE_CANTABULAR"`
 	CantabularURL              string        `envconfig:"CANT_URL"`
 	CantabularUser             string        `envconfig:"CANT_USER"`
+	DoCors                     bool          `envconfig:"DO_CORS"`
 }
 
 var cfg *Config

@@ -108,6 +108,7 @@ Particularly api/api.go (and similar files) shouldn't be directly edited.
 | PGPASSWORD                   |           | postgres password when ENABLE_DATABASE is true (also see FI_PG_SECRET_ID)
 | PGDATABASE                   |           | postgres database when ENABLE_DATABASE is true
 | FI_PG_SECRET_ID              |           | ARN of key holding postgres password if PGPASSWORD is empty
+| DO_CORS                      | false     | Add Access-Control-Allow-Origin: * to headers if true (not needed in develop / prod)
 
 ### Contributing
 
