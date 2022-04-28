@@ -1,7 +1,5 @@
 package handlers
 
-// XXX move config into Server and don't call config.Get
-
 import (
 	"context"
 	"encoding/json"
@@ -9,7 +7,6 @@ import (
 
 	"github.com/ONSdigital/dp-geodata-api/api"
 	"github.com/ONSdigital/dp-geodata-api/cache"
-	"github.com/ONSdigital/dp-geodata-api/config"
 	"github.com/ONSdigital/dp-geodata-api/metadata"
 	"github.com/ONSdigital/dp-geodata-api/pkg/geodata"
 	"github.com/ONSdigital/dp-geodata-api/postcode"
@@ -18,20 +15,28 @@ import (
 )
 
 type Server struct {
-	private      bool             // true if private endpoints are enabled
-	querygeodata *geodata.Geodata // if nil, database not available
-	md           *metadata.Metadata
-	cm           *cache.Manager
-	pc           *postcode.Postcode
+	apiToken         string
+	bindAddr         string
+	doCors           bool
+	enableHeaderAuth bool
+	private          bool             // true if private endpoints are enabled
+	querygeodata     *geodata.Geodata // if nil, database not available
+	md               *metadata.Metadata
+	cm               *cache.Manager
+	pc               *postcode.Postcode
 }
 
-func New(private bool, querygeodata *geodata.Geodata, md *metadata.Metadata, cm *cache.Manager, pc *postcode.Postcode) *Server {
+func New(apiToken, bindAddr string, enableHeaderAuth, doCors, private bool, querygeodata *geodata.Geodata, md *metadata.Metadata, cm *cache.Manager, pc *postcode.Postcode) *Server {
 	return &Server{
-		private:      private,
-		querygeodata: querygeodata,
-		md:           md,
-		cm:           cm,
-		pc:           pc,
+		apiToken:         apiToken,
+		bindAddr:         bindAddr,
+		doCors:           doCors,
+		enableHeaderAuth: enableHeaderAuth,
+		private:          private,
+		querygeodata:     querygeodata,
+		md:               md,
+		cm:               cm,
+		pc:               pc,
 	}
 }
 
@@ -50,12 +55,8 @@ func (svr *Server) GetSwaggerui(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "html")
 	w.WriteHeader(http.StatusOK)
 	ctx := r.Context()
-	c, err := config.Get()
-	if err != nil {
-		sendError(ctx, w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	b, err := Swagger.GetSwaggerUIPage("http://"+c.BindAddr+"/swagger", "")
+
+	b, err := Swagger.GetSwaggerUIPage("http://"+svr.bindAddr+"/swagger", "")
 	if err != nil {
 		sendError(ctx, w, http.StatusInternalServerError, err.Error())
 		return
@@ -158,10 +159,10 @@ func (svr *Server) GetClearCache(w http.ResponseWriter, r *http.Request) {
 }
 
 func (svr *Server) Preflight(w http.ResponseWriter, r *http.Request, path string, year int) {
-	c, _ := config.Get()
-	if c.DoCors {
+	if svr.doCors {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 	}
+
 	w.Header().Set("Access-Control-Allow-Headers", "Cache-Control")
 }
 
@@ -179,14 +180,13 @@ func (svr *Server) assertPrivate(w http.ResponseWriter, r *http.Request) bool {
 // Returns true if authorized.
 func (svr *Server) assertAuthorized(w http.ResponseWriter, req *http.Request) bool {
 	// check Auth header
-	c, _ := config.Get()
-	if !c.EnableHeaderAuth {
+	if !svr.enableHeaderAuth {
 		return true
 	}
 
 	ahdr := "Authorization"
 	auth := req.Header.Get(ahdr)
-	if auth == c.APIToken {
+	if auth == svr.apiToken {
 		return true
 	}
 

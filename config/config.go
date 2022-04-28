@@ -15,7 +15,7 @@ type Config struct {
 	EnableDatabase             bool          `envconfig:"ENABLE_DATABASE"`
 	MaxMetrics                 int           `envconfig:"MAX_METRICS"`
 	WriteTimeout               time.Duration `envconfig:"WRITE_TIMEOUT"`
-	APIToken                   string        `envconfig:"API_TOKEN"`
+	APIToken                   string        `envconfig:"API_TOKEN"                     json:"-"`
 	EnableHeaderAuth           bool          `envconfig:"ENABLE_HEADER_AUTH"`
 	CacheSize                  int           `envconfig:"CACHE_SIZE"`
 	CacheTTL                   time.Duration `envconfig:"CACHE_TTL"`
