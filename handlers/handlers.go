@@ -153,7 +153,10 @@ func (svr *Server) GetClearCache(w http.ResponseWriter, r *http.Request) {
 }
 
 func (svr *Server) Preflight(w http.ResponseWriter, r *http.Request, path string, year int) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	c, _ := config.Get()
+	if c.DoCors {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+	}
 	w.Header().Set("Access-Control-Allow-Headers", "Cache-Control")
 }
 
