@@ -12,11 +12,13 @@ import (
 	"github.com/ONSdigital/dp-geodata-api/postcode"
 	Swagger "github.com/ONSdigital/dp-geodata-api/swagger"
 	"github.com/ONSdigital/log.go/v2/log"
+	"github.com/getkin/kin-openapi/openapi3"
 )
 
 type Server struct {
 	apiToken         string
 	bindAddr         string
+	baseURL          string
 	doCors           bool
 	enableHeaderAuth bool
 	private          bool             // true if private endpoints are enabled
@@ -26,10 +28,11 @@ type Server struct {
 	pc               *postcode.Postcode
 }
 
-func New(apiToken, bindAddr string, enableHeaderAuth, doCors, private bool, querygeodata *geodata.Geodata, md *metadata.Metadata, cm *cache.Manager, pc *postcode.Postcode) *Server {
+func New(apiToken, bindAddr, baseURL string, enableHeaderAuth, doCors, private bool, querygeodata *geodata.Geodata, md *metadata.Metadata, cm *cache.Manager, pc *postcode.Postcode) *Server {
 	return &Server{
 		apiToken:         apiToken,
 		bindAddr:         bindAddr,
+		baseURL:          baseURL,
 		doCors:           doCors,
 		enableHeaderAuth: enableHeaderAuth,
 		private:          private,
@@ -42,6 +45,12 @@ func New(apiToken, bindAddr string, enableHeaderAuth, doCors, private bool, quer
 
 func (svr *Server) GetSwagger(w http.ResponseWriter, r *http.Request) {
 	spec, _ := Swagger.GetOpenAPISpec()
+	if svr.baseURL != "" {
+		server := &openapi3.Server{
+			URL: svr.baseURL,
+		}
+		spec.AddServer(server)
+	}
 	b, err := spec.MarshalJSON()
 	if err != nil {
 		sendError(r.Context(), w, http.StatusInternalServerError, err.Error())

@@ -9,6 +9,7 @@ import (
 // Config represents service configuration for dp-geodata-api
 type Config struct {
 	BindAddr                   string        `envconfig:"BIND_ADDR"`
+	BaseURL                    string        `envconfig:"BASEURL"`
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`

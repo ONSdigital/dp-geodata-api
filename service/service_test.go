@@ -295,3 +295,56 @@ func TestClose(t *testing.T) {
 		})
 	})
 }
+
+func Test_ParseBaseURL_Error(t *testing.T) {
+	var tests = map[string]struct {
+		baseurl  string
+		bindaddr string
+	}{
+		"BIND_ADDR missing port": {"host", ""},
+		"BASEURL missing port":   {"", "https://host"},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			_, _, err := service.ParseBaseURL(test.baseurl, test.bindaddr)
+			if err == nil {
+				t.Error("expected error")
+			}
+		})
+	}
+}
+
+func Test_ParseBaseURL(t *testing.T) {
+	var tests = map[string]struct {
+		baseurl  string
+		bindaddr string
+		server   string
+		prefix   string
+	}{
+		"both empty, default": {"", "", "http://localhost:25252", ""},
+
+		// only BIND_ADDR
+		"just BIND_ADDR port":     {":123", "", "http://localhost:123", ""},
+		"BIND_ADDR host and port": {"host:8000", "", "http://host:8000", ""},
+
+		// only BASEURL
+		"BASEURL scheme, host, port":         {"", "https://host:100", "https://host:100", ""},
+		"BASEURL scheme, host, port, prefix": {"", "https://host:200/v1/geodata", "https://host:200", "/v1/geodata"},
+
+		// BIND_ADDR and BASEURL
+		"BASEURL overrides BIND_ADDR": {"localhost:25252", "https://api:27000/foo", "https://api:27000", "/foo"},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			server, prefix, err := service.ParseBaseURL(test.baseurl, test.bindaddr)
+			if err != nil {
+				t.Error(err)
+			}
+			if server != test.server || prefix != test.prefix {
+				t.Errorf("server %q prefix %q, want %q %q", server, prefix, test.server, test.prefix)
+			}
+		})
+	}
+}

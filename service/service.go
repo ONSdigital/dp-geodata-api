@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -110,9 +111,28 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 
+	// Who am I?
+	baseurl, prefix, err := ParseBaseURL(cfg.BindAddr, cfg.BaseURL)
+	if err != nil {
+		return nil, err
+	}
+	if prefix == "" {
+		prefix = "/v1/geodata"
+	}
+
 	// Setup the API
-	a := handlers.New(cfg.APIToken, cfg.BindAddr, cfg.EnableHeaderAuth, cfg.DoCors,
-		true, queryGeodata, md, cm, pc) // always include private handlers for now
+	a := handlers.New(
+		cfg.APIToken,
+		cfg.BindAddr,
+		baseurl+prefix,
+		cfg.EnableHeaderAuth,
+		cfg.DoCors,
+		true, // always include private handlers for now
+		queryGeodata,
+		md,
+		cm,
+		pc,
+	)
 
 	// Setup health checks
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
@@ -137,7 +157,6 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	}
 
 	stripOptionalPrefix := func(h http.Handler) http.Handler {
-		prefix := "/v1/geodata"
 		strip := func(w http.ResponseWriter, r *http.Request) {
 			p := strings.TrimPrefix(r.URL.Path, prefix)
 			rp := strings.TrimPrefix(r.URL.RawPath, prefix)
@@ -244,4 +263,51 @@ func registerCheckers(ctx context.Context,
 		err = hc.AddCheck("cantabular", cant.Checker)
 	}
 	return err
+}
+
+// ParseBaseURL figures out this instance's scheme, host, port and endpoint prefix.
+// These pieces of info are used to strip optional endpoint prefixes from incomimg
+// requests and to help swaggerui construct self-referential URLs.
+func ParseBaseURL(bindaddr, baseurl string) (server, prefix string, err error) {
+	scheme := "http"
+	host := "localhost"
+	port := "25252"
+
+	if bindaddr != "" {
+		h, p, err := net.SplitHostPort(bindaddr)
+		if err != nil {
+			return "", "", err
+		}
+		if h != "" {
+			host = h
+		}
+		if p != "" {
+			port = p
+		}
+	}
+
+	if baseurl != "" {
+		u, err := url.Parse(baseurl)
+		if err != nil {
+			return "", "", err
+		}
+		if u.Scheme != "" {
+			scheme = u.Scheme
+		}
+		h, p, err := net.SplitHostPort(u.Host)
+		if err != nil {
+			return "", "", err
+		}
+		if h != "" {
+			host = h
+		}
+		if p != "" {
+			port = p
+		}
+		if u.Path != "" {
+			prefix = u.Path
+		}
+	}
+
+	return scheme + "://" + net.JoinHostPort(host, port), prefix, nil
 }
