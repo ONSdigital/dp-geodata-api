@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/ONSdigital/dp-geodata-api/cache"
-	"github.com/ONSdigital/dp-geodata-api/config"
 	"github.com/ONSdigital/dp-geodata-api/sentinel"
 	"github.com/ONSdigital/log.go/v2/log"
 )
@@ -21,9 +20,8 @@ type generateFunc func() ([]byte, error)
 // respond returns cached data if it is available, or generates and caches new data.
 func (svr *Server) respond(w http.ResponseWriter, r *http.Request, contentType string, generate generateFunc) {
 
-	// add CORS header if doing that
-	c, _ := config.Get()
-	if c.DoCors {
+	// add CORS header if application configured to do so
+	if svr.doCors {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 	}
 

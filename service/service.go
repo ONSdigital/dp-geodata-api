@@ -36,9 +36,8 @@ type Service struct {
 // Run the service
 func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceList, buildTime, gitCommit, version string, svcErrors chan error) (*Service, error) {
 
+	log.Info(ctx, "config on startup", log.Data{"config": cfg, "build_time": buildTime, "git-commit": gitCommit})
 	log.Info(ctx, "running service")
-
-	log.Info(ctx, "using service configuration", log.Data{"config": cfg})
 
 	var cant *cantabular.Client
 	if cfg.EnableCantabular {
@@ -112,7 +111,8 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 	}
 
 	// Setup the API
-	a := handlers.New(true, queryGeodata, md, cm, pc) // always include private handlers for now
+	a := handlers.New(cfg.APIToken, cfg.BindAddr, cfg.EnableHeaderAuth, cfg.DoCors,
+		true, queryGeodata, md, cm, pc) // always include private handlers for now
 
 	// Setup health checks
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)

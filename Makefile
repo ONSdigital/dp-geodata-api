@@ -47,7 +47,7 @@ build-linux-arm:	## build poc service specifically for linux on arm64 (used for 
 .PHONY: debug
 debug:	## run poc service in debug mode
 	go build -tags 'debug' $(LDFLAGS) -o $(BINPATH)/dp-geodata-api ./cmd/dp-geodata-api
-	HUMAN_LOG=1 DEBUG=1 $(BINPATH)/dp-geodata-api
+	HUMAN_LOG=1 DEBUG=1 DO_CORS=true $(BINPATH)/dp-geodata-api
 
 .PHONY: test
 test:	## run poc tests
@@ -183,10 +183,10 @@ test-local: ## run integration tests against local instance
 	cd inttests && make test-local
 
 test-dev:	## run integration tests against dev EC2 instance
-	cd inttests && TEST_TARGET_URL=http://$(DEV_HOST):25252 make test
+	cd inttests && TEST_TARGET_URL=http://$(DEV_HOST):25252 DO_CORS=true make test
 
 test-int:	## run integration tests against F/E EC2 instance
-	cd inttests && TEST_TARGET_URL=http://$(INT_HOST):25252 make test
+	cd inttests && TEST_TARGET_URL=http://$(INT_HOST):25252 DO_CORS=true make test
 
 #
 # rollback API on EC2 instances

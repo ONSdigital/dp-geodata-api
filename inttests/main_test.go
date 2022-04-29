@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -23,6 +24,18 @@ var local = flag.Bool("local", false, "run tests against locally-running API")
 
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
+}
+
+func doCors(t *testing.T) bool {
+	env := os.Getenv("DO_CORS")
+	if env == "" {
+		return false
+	}
+	doCors, err := strconv.ParseBool(env)
+	if err != nil {
+		t.Fatalf("DO_CORS: %s", err)
+	}
+	return doCors
 }
 
 // makeURL returns a test's URL and possibly a second url that should return the same results.
@@ -50,12 +63,10 @@ func makeURL(endpoint, query string) (string, string) {
 
 func TestOPTIONS(t *testing.T) {
 	// Not all headers are preserved when the API is behind the router.
-	// So don't test for these headers unless we are talking to an API
-	// we see directly.
-	// XXX maybe this should be an environment variable?
-	// XXX or maybe figure out how to use the router better?
-	if baseURL != defaultBaseURL && baseURL != baseURLLocal {
-		t.Skipf("only test OPTIONS against known API instances")
+	// So $DO_CORS can toggle this test.
+	// XXX maybe we should figure out how to use the router better?
+	if !doCors(t) {
+		t.Skip("DO_CORS is false")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -117,6 +128,10 @@ func TestAPI(t *testing.T) {
 
 // Assert CORS header allows cross-origin requests from any source (needed for web apps to use the API)
 func assertCORSHeader(h map[string][]string, url string, t *testing.T) {
+	// XXX see TestOPTIONS
+	if !doCors(t) {
+		t.Skip("DO_CORS is false")
+	}
 	cors, ok := h["Access-Control-Allow-Origin"]
 	if ok {
 		if !IsStringInSlice("*", cors) {
