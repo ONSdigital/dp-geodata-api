@@ -50,12 +50,7 @@ func (svr *Server) GetSwaggerui(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "html")
 	w.WriteHeader(http.StatusOK)
 	ctx := r.Context()
-	c, err := config.Get()
-	if err != nil {
-		sendError(ctx, w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	b, err := Swagger.GetSwaggerUIPage("http://"+c.BindAddr+"/swagger", "")
+	b, err := Swagger.GetSwaggerUIPage("/v1/geodata/swagger", "")
 	if err != nil {
 		sendError(ctx, w, http.StatusInternalServerError, err.Error())
 		return

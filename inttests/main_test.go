@@ -4,13 +4,13 @@
 package main
 
 import (
-	"context"
+	//"context"
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
+	//"net/http"
 	"os"
-	"strings"
+	//"strings"
 	"testing"
 	"time"
 
@@ -49,6 +49,15 @@ func makeURL(endpoint, query string) (string, string) {
 }
 
 func TestOPTIONS(t *testing.T) {
+	// Not all headers are preserved when the API is behind the router.
+	// So don't test for these headers unless we are talking to an API
+	// we see directly.
+	// XXX maybe this should be an environment variable?
+	// XXX or maybe figure out how to use the router better?
+	if baseURL != defaultBaseURl && baseURL != baseURLLocal {
+		t.Skipf("only test OPTIONS against known API instances")
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
