@@ -4,13 +4,13 @@
 package main
 
 import (
-	//"context"
+	"context"
 	"flag"
 	"fmt"
 	"log"
-	//"net/http"
+	"net/http"
 	"os"
-	//"strings"
+	"strings"
 	"testing"
 	"time"
 
@@ -54,7 +54,7 @@ func TestOPTIONS(t *testing.T) {
 	// we see directly.
 	// XXX maybe this should be an environment variable?
 	// XXX or maybe figure out how to use the router better?
-	if baseURL != defaultBaseURl && baseURL != baseURLLocal {
+	if baseURL != defaultBaseURL && baseURL != baseURLLocal {
 		t.Skipf("only test OPTIONS against known API instances")
 	}
 
