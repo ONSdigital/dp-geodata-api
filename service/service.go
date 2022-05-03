@@ -117,7 +117,7 @@ func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceLi
 		return nil, err
 	}
 	if prefix == "" {
-		prefix = "/v1/geodata"
+		prefix = "/v1/geodata" // for backward compatibility
 	}
 
 	// Setup the API
@@ -268,46 +268,46 @@ func registerCheckers(ctx context.Context,
 // ParseBaseURL figures out this instance's scheme, host, port and endpoint prefix.
 // These pieces of info are used to strip optional endpoint prefixes from incomimg
 // requests and to help swaggerui construct self-referential URLs.
+//
+// If baseurl is set, then use it exclusively.
+// Else if bindaddr has a missing or 0.0.0.0 host, use os.Hostname()
+// Else use host and port from bindaddr.
 func ParseBaseURL(bindaddr, baseurl string) (server, prefix string, err error) {
-	scheme := "http"
-	host := "localhost"
-	port := "25252"
-
-	if bindaddr != "" {
-		h, p, err := net.SplitHostPort(bindaddr)
-		if err != nil {
-			return "", "", err
-		}
-		if h != "" {
-			host = h
-		}
-		if p != "" {
-			port = p
-		}
-	}
-
 	if baseurl != "" {
 		u, err := url.Parse(baseurl)
 		if err != nil {
 			return "", "", err
 		}
-		if u.Scheme != "" {
-			scheme = u.Scheme
+		if u.Scheme != "http" && u.Scheme != "https" {
+			return "", "", errors.New("BASEURL: http or https expected")
 		}
-		h, p, err := net.SplitHostPort(u.Host)
+		if u.User != nil {
+			return "", "", errors.New("BASEURL: user/pass not allowed")
+		}
+		if u.Hostname() == "" {
+			return "", "", errors.New("BASEURL: host expected")
+		}
+		if u.RawQuery != "" {
+			return "", "", errors.New("BASEURL: query string now allowed")
+		}
+		if u.Fragment != "" {
+			return "", "", errors.New("BASEURL: fragment not allowed")
+		}
+		prefix = u.Path
+		u.Path = ""
+		return u.String(), prefix, nil
+	}
+
+	host, port, err := net.SplitHostPort(bindaddr)
+	if err != nil {
+		return "", "", err
+	}
+	if host == "" || host == "0.0.0.0" {
+		host, err = os.Hostname()
 		if err != nil {
 			return "", "", err
 		}
-		if h != "" {
-			host = h
-		}
-		if p != "" {
-			port = p
-		}
-		if u.Path != "" {
-			prefix = u.Path
-		}
 	}
 
-	return scheme + "://" + net.JoinHostPort(host, port), prefix, nil
+	return "http://" + net.JoinHostPort(host, port), prefix, nil
 }
