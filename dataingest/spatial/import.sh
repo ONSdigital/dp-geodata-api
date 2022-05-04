@@ -6,6 +6,7 @@ tables='
 lsoa_gis|Lower_Layer_Super_Output_Areas_(December_2011)_Boundaries_Super_Generalised_Clipped_(BSC)_EW_V3.geojson
 lad_gis|LAD2011ish.geojson
 msoa_gis|Middle_Layer_Super_Output_Areas_(December_2011)_Boundaries_Super_Generalised_Clipped_(BSC)_EW_V3.geojson
+oa_gis|Output_Areas__December_2011__Boundaries_EW_BGC.geojson
 '
 
 while read line
@@ -32,20 +33,29 @@ EOF
 psql -c "ALTER TABLE lad_gis ADD CONSTRAINT uq_lad17cd UNIQUE(lad17cd)"
 psql -c "ALTER TABLE lsoa_gis ADD CONSTRAINT uq_lsoa11cd UNIQUE(lsoa11cd)"
 psql -c "ALTER TABLE msoa_gis ADD CONSTRAINT uq_msoa11cd UNIQUE(msoa11cd)"
+psql -c "ALTER TABLE oa_gis ADD CONSTRAINT uq_oa11cd UNIQUE(oa11cd)"
 
 # copy LAD data into geo
 psql <<EOT
 \x
 UPDATE geo SET wkb_geometry=lad_gis.wkb_geometry, long=lad_gis.long, lat=lad_gis.lat, name=lad_gis.lad17nm, welsh_name=lad_gis.lad17nmw
-FROM lad_gis  
+FROM lad_gis
 WHERE geo.code=lad_gis.lad17cd AND geo.type_id=4
 EOT
+
+# copy OA data into geo
+psql <<EOT2
+\x
+UPDATE geo SET wkb_geometry=oa_gis.wkb_geometry, long=oa_gis.long, lat=oa_gis.lat, name=oa_gis.oa11cd,  welsh_name=oa_gis.oa11cd 
+FROM oa_gis
+WHERE geo.code=oa_gis.oa11cd AND geo.type_id=7
+EOT2
 
 # copy LSOA data into geo
 psql <<EOT2
 \x
 UPDATE geo SET wkb_geometry=lsoa_gis.wkb_geometry, long=lsoa_gis.long, lat=lsoa_gis.lat, name=lsoa_gis.lsoa11nm,  welsh_name=lsoa11nmw 
-FROM lsoa_gis  
+FROM lsoa_gis
 WHERE geo.code=lsoa_gis.lsoa11cd AND geo.type_id=6
 EOT2
 
@@ -55,7 +65,7 @@ EOT2
 psql <<EOT3
 \x
 UPDATE geo SET wkb_geometry=msoa_gis.wkb_geometry, long=msoa_gis.long, lat=msoa_gis.lat, welsh_name=msoa11nmw
-FROM msoa_gis  
+FROM msoa_gis
 WHERE geo.code=msoa_gis.msoa11cd AND geo.type_id=5
 EOT3
 
@@ -63,6 +73,7 @@ EOT3
 psql -c "DROP TABLE lsoa_gis"
 psql -c "DROP TABLE lad_gis"
 psql -c "DROP TABLE msoa_gis"
+psql -c "DROP TABLE oa_gis"
 
 # set "English Welsh" names (which aren't actually Welsh) to be HoC MSOA names
 psql -c "update geo set welsh_name=name where code like 'E%' and type_id=5;"

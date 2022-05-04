@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/ONSdigital/dp-geodata-api/model"
-	"github.com/ONSdigital/dp-geodata-api/postcode"
 	"github.com/ONSdigital/dp-geodata-api/pkg/database"
+	"github.com/ONSdigital/dp-geodata-api/postcode"
 	"github.com/spf13/cast"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -148,7 +148,7 @@ func TestWelshAbsent(t *testing.T) {
 func TestMsoaDataPresent(t *testing.T) {
 	var count int
 	if err := db.Raw(`
-	SELECT count(*) 
+	SELECT count(*)
 	FROM geo_metric, geo
 	WHERE geo_metric.geo_id=geo.id 
 	AND geo.type_id=5
@@ -166,7 +166,7 @@ func TestMsoaDataPresent(t *testing.T) {
 func TestMsoaCodesPresent(t *testing.T) {
 	var count int
 	if err := db.Raw(`
-	SELECT count(*) 
+	SELECT count(*)
 	FROM geo
 	WHERE type_id=5
 	`).Scan(&count).Error; err != nil {
@@ -180,7 +180,42 @@ func TestMsoaCodesPresent(t *testing.T) {
 	}
 }
 
-func TestAllGeoNamed(t *testing.T ) {
+func TestOaDataPresent(t *testing.T) {
+	var count int
+	if err := db.Raw(`
+	SELECT count(*)
+	FROM geo_metric, geo
+	WHERE geo_metric.geo_id=geo.id 
+	AND geo.type_id=7
+	`).Scan(&count).Error; err != nil {
+		t.Error(err)
+	}
+
+	fmt.Printf("%#v\n", count)
+
+	if count == 0 {
+		t.Error("OA data not there")
+	}
+}
+
+func TestOaCodesPresent(t *testing.T) {
+	var count int
+	if err := db.Raw(`
+	SELECT count(*)
+	FROM geo
+	WHERE type_id=7
+	`).Scan(&count).Error; err != nil {
+		t.Error(err)
+	}
+
+	fmt.Printf("%#v\n", count)
+
+	if count == 0 {
+		t.Error("OA codes not there")
+	}
+}
+
+func TestAllGeoNamed(t *testing.T) {
 	var count int
 	if err := db.Raw(`
 	SELECT count(*) 
@@ -292,22 +327,21 @@ func TestLongNomisCode(t *testing.T) {
 	}
 }
 
-func TestPostCode(t *testing.T ) {
+func TestPostCode(t *testing.T) {
 
 	code, _, err := postcode.New(db).GetMSOA("SA3 3DW")
 
 	if err != nil {
 		t.Errorf(err.Error())
-	} 
+	}
 
 	if code != "W02000195" {
 		t.Errorf(code)
 	}
 
-
 }
 
-func TestWelsh(t *testing.T ) {
+func TestWelsh(t *testing.T) {
 
 	var name string
 	if err := db.Raw(`
@@ -318,8 +352,8 @@ func TestWelsh(t *testing.T ) {
 		t.Error(err)
 	}
 
-	if name!="Swansea" {
-		 t.Errorf("got unexpected %s", name)
+	if name != "Swansea" {
+		t.Errorf("got unexpected %s", name)
 	}
 
 }
@@ -330,7 +364,7 @@ func TestWelsh(t *testing.T ) {
 // There is only real Welsh translation for codes starting with W.
 //
 // We have to fix up these English Welsh Names to be HoC ("nice") version.
-func TestEnglishWelshMSOA(t *testing.T ) {
+func TestEnglishWelshMSOA(t *testing.T) {
 
 	var name string
 	if err := db.Raw(`
@@ -341,8 +375,8 @@ func TestEnglishWelshMSOA(t *testing.T ) {
 		t.Error(err)
 	}
 
-	if name!="Cowplain East" {
-		 t.Errorf("got unexpected '%s'", name)
+	if name != "Cowplain East" {
+		t.Errorf("got unexpected '%s'", name)
 	}
 
 }

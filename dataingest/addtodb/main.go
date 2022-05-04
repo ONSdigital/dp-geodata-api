@@ -225,6 +225,13 @@ func (di *dataIngest) addGeoGeoMetricData(longToCatid map[string]int32) {
 
 		recs := readCsvFile(fn)
 
+		// skip empty files (header row but no data)
+		// this happens when the current dataset isn't available for all geographies
+		if len(recs) < 2 {
+			fmt.Println("\tskipping; no data in file")
+			continue
+		}
+
 		// files should all be the same geotype, so should be safe to run this only on the first data line
 		geoType, err := di.geotypeIDFromGSSCode(recs[1][0])
 		if err != nil {
