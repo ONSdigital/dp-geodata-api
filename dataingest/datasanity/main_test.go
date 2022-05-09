@@ -237,7 +237,7 @@ func TestGeomUKBbox(t *testing.T) {
 	// UK like bbox
 	if err := db.Raw(`
 	SELECT code FROM geo 
-	WHERE NOT geo.wkb_geometry && ST_GeomFromText( 'MULTIPOINT( -7.57 49.92, 1.76 58.64)', 4326)
+	WHERE NOT geo.wkb_geometry && ST_GeomFromText( 'MULTIPOINT( -7.57 49.91, 1.76 58.64)', 4326)
 	`).Scan(&codes).Error; err != nil {
 		t.Error(err)
 	}
@@ -252,7 +252,7 @@ func TestLatLongGeom(t *testing.T) {
 	// UK like bbox
 	if err := db.Raw(`
 	SELECT code FROM geo 
-	WHERE NOT geo.wkb_long_lat_geom && ST_GeomFromText( 'MULTIPOINT( -7.57 49.92, 1.76 58.64)', 4326)`).Scan(&codes).Error; err != nil {
+	WHERE NOT geo.wkb_long_lat_geom && ST_GeomFromText( 'MULTIPOINT( -7.57 49.91, 1.76 58.64)', 4326)`).Scan(&codes).Error; err != nil {
 		t.Error(err)
 	}
 

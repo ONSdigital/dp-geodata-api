@@ -14,7 +14,7 @@ const maxRadius = 1000000 // largest "sane" Circle radius 1000km
 // Defined UK bounding box for basic sanity checking.
 var ukbbox = geom.NewBounds(geom.XY).SetCoords(
 	geom.Coord{-7.57, 58.64}, // NW corner
-	geom.Coord{1.76, 49.92},  // SE corner
+	geom.Coord{1.76, 49.91},  // SE corner
 )
 
 // parseCoords parses a comma-separated list of floats and returns a []float64.

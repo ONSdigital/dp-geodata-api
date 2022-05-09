@@ -46,9 +46,15 @@ EOT
 # copy OA data into geo
 psql <<EOT2
 \x
-UPDATE geo SET wkb_geometry=oa_gis.wkb_geometry, long=oa_gis.long, lat=oa_gis.lat, name=oa_gis.oa11cd,  welsh_name=oa_gis.oa11cd 
+UPDATE geo
+SET
+    wkb_geometry = oa_gis.wkb_geometry,
+    wkb_long_lat_geom = ST_Centroid(oa_gis.wkb_geometry)::geometry,
+    name = oa_gis.oa11cd,
+    welsh_name = oa_gis.oa11cd
 FROM oa_gis
-WHERE geo.code=oa_gis.oa11cd AND geo.type_id=7
+WHERE geo.code = oa_gis.oa11cd
+AND geo.type_id=7
 EOT2
 
 # copy LSOA data into geo
