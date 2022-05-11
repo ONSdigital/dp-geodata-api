@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -162,6 +162,44 @@ func (di *dataIngest) addCategoryData() map[string]int32 {
 	return m
 }
 
+// identifies geotype from prefix of GSS code (from https://en.wikipedia.org/wiki/ONS_coding_system)
+func (di *dataIngest) geotypeIDFromGSSCode(gssCode string) (int, error) {
+	// geotype IDs are taken from NOMIS naming convention:
+	geotypeToGeotypeID := map[string]int{
+		"EW":      1,
+		"Country": 2,
+		"Region":  3,
+		"LAD":     4,
+		"MSOA":    5,
+		"LSOA":    6,
+		"OA":      7,
+	}
+	gssCodePrefixToGeotype := map[string]string{
+		"E00": "OA",
+		"W00": "OA",
+		"E01": "LSOA",
+		"W01": "LSOA",
+		"E02": "MSOA",
+		"W02": "MSOA",
+		"E06": "LAD",
+		"W06": "LAD",
+		"E07": "LAD",
+		"E08": "LAD",
+		"E09": "LAD",
+		"E12": "Region",
+		"E92": "Country",
+		"W92": "Country",
+		"K04": "EW",
+	}
+	gssCodePrefix := gssCode[:3]
+	geotype, prs := gssCodePrefixToGeotype[gssCodePrefix]
+	if !prs {
+		return 0, errors.New(fmt.Sprintf("GSS code %s references an unrecognised geotype", gssCode))
+	}
+	geotypeID, _ := geotypeToGeotypeID[geotype]
+	return geotypeID, nil
+}
+
 // adds to "geo" tables (but without geo.name!)
 // adds to "geo_metric"
 func (di *dataIngest) addGeoGeoMetricData(longToCatid map[string]int32) {
@@ -170,7 +208,6 @@ func (di *dataIngest) addGeoGeoMetricData(longToCatid map[string]int32) {
 	pool := di.pool
 
 	pool.Exec(context.Background(), "SET synchronous_commit TO off")
-	re := regexp.MustCompile(`DATA0(\d)\.CSV`)
 
 	ctx := context.Background()
 
@@ -184,17 +221,22 @@ func (di *dataIngest) addGeoGeoMetricData(longToCatid map[string]int32) {
 
 	for i, fn := range di.files.data {
 
-		match := re.FindStringSubmatch(fn)
+		fmt.Printf("file %d of %d, %.2f step min(s), name=%s\n", i, num, time.Since(t0).Minutes(), fn)
 
-		if len(match) == 0 {
+		recs := readCsvFile(fn)
+
+		// skip empty files (header row but no data)
+		// this happens when the current dataset isn't available for all geographies
+		if len(recs) < 2 {
+			fmt.Println("\tskipping; no data in file")
 			continue
 		}
 
-		fmt.Printf("file %d of %d, %.2f step min(s), name=%s\n", i, num, time.Since(t0).Minutes(), fn)
-
-		geoType := cast.ToInt32(match[1])
-
-		recs := readCsvFile(fn)
+		// files should all be the same geotype, so should be safe to run this only on the first data line
+		geoType, err := di.geotypeIDFromGSSCode(recs[1][0])
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		headers := recs[0]
 

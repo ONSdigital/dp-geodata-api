@@ -20,4 +20,5 @@ cd longlatgeom  && go run .
 cd ../../postcode  && go run . 
 delta=$((SECONDS-otime))
 echo "about" $((delta/60)) "min(s) elapsed"
+psql -c 'vacuum analyze'
 cd ../../dataingest && make test

@@ -158,8 +158,7 @@ func (PostCode) TableName() string {
 
 // GetGeoTypeValues returns a slice of geo types
 func GetGeoTypeValues() []string {
-	// XXX LSOA to be removed
-	return []string{"EW", "Country", "Region", "LAD", "MSOA", "LSOA"}
+	return []string{"EW", "Country", "Region", "LAD", "MSOA", "LSOA", "OA"}
 }
 
 // GetGeoTypeValues returns a map of geo types for validation
