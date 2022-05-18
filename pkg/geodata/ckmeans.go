@@ -11,317 +11,268 @@ import (
 	"github.com/jtrim-ons/ckmeans/pkg/ckmeans"
 )
 
-// Chunk holds multiple catgeory data for a single geocode
+// Implementation notes:
 //
-type Chunk struct {
-	geocode string
-	geotype string
-	metrics map[string]float64
+// OA-sized datasets are big.
+// There are 181408 OAs, which means that SQL queries must return that many rows for each
+// geotype-catcode combination.
+// An OA ratio query for 7 catcodes, will result in 8 * 181408 rows returned.
+//
+// The pre-OA implementation sent a single query to postgres, and loaded the results
+// into a set of maps and slices, summarising chunk by chunk.
+// Unfortunately, with OA-sized queries, sorting in database is a large performance hit,
+// and the sheer size of the results consumed way too much memory.
+//
+// This implementation does two things in an attempt to improve performance and memory
+// requirements, but only partially successfully.
+//
+// 1. Instead of a single large SQL query, we query for each geotype-catcode separately
+//    and do not ORDER BY.
+//    These queries do not return geotype and catcode as before, but only return geocodes
+//    and metric values, reducing the overall size of each result set.
+// 2. To avoid large map and slice reallocations, we reuse large maps and slices when
+//    possible, especially when loading a geotype-catcode metric set.
+//
+// Alas, although execution speed was improved, memory usage was not improved enough.
+// I still can't get it to run in a 128MB container.
+// The sql library (or the underlying pgx library) uses too much memory.
+// And the ckmeans library by necessity also uses a measurable amount.
+// But our special test query now runs in a 256MB container and comes back in ~3s with a
+// local db and ~6.2s against RDS.
+// (Previous figures were ~4s and ~10s respectively.)
+
+// CkmeansParams holds data and methods neccessary to parse and process data for ckmeans queries
+type CkmeansParams struct {
+	year     int
+	geotypes []string
+	catcodes []string
+	divideBy string
+	k        int
+	db       *sql.DB
+
+	// breaks holds the results to be returned by Ckmeans.
+	// The top level map is the category code, and the next level map holds the geotype
+	// or <geotype>_min_max.
+	// The float64 slice holds the break points or min/max values.
+	// For example:
+	// 	minmax := map["QS501EW0008"]["OA_min_max"]
+	//	(minmax[0] is min, minmax[1] is max)
+	// or
+	//	breaks := map["QS501EW0008"]["OA"]
+	//
+	// Certain combinations of errors or missing data call for either nil or an empty map to
+	// be returned.
+	breaks map[string]map[string][]float64
 }
 
-// CkmeansParser holds data and methods neccessary to parse and process data for ckmeans queries
+// Ckmeans calculates ckmean breaks and min-max values for the metrics in
+// each geotype-catcode combination.
 //
-type CkmeansParser struct {
-	catcodes   []string
-	geotypes   []string
-	divideBy   string
-	k          int
-	rowGeocode string
-	rowGeotype string
-	nmetrics   int
-	metrics    map[string]map[string][]float64
-	breaks     map[string]map[string][]float64
-	chunk      *Chunk
-}
+// When divideBy is not empty, this is taken to be the denominator of a ratio
+// query.
+// The metrics of each geotype-catcode combination are divided by the metrics
+// of the denominator, matching geocode to geocode.
+// ckmeans and min-max are then are calculated over the ratios.
+func (app *Geodata) CKmeans(ctx context.Context, year int, cat, geotype []string, k int, divideBy string) (map[string]map[string][]float64, error) {
+	catcodes, err := parseCat(cat)
+	if err != nil {
+		return nil, err
+	}
 
-// New creates a new CkmeansParser.
-//
-func NewCkmeansParser(divideBy string, k int) *CkmeansParser {
-	return &CkmeansParser{
-		catcodes:   []string{},
-		geotypes:   []string{},
-		divideBy:   divideBy,
-		k:          k,
-		rowGeocode: "",
-		rowGeotype: "",
-		chunk: &Chunk{
-			geocode: "",
-			geotype: "",
-			metrics: map[string]float64{},
-		},
-		nmetrics: 0,
-		metrics:  map[string]map[string][]float64{},
+	geotypes, err := parseValidateGeotype(geotype)
+	if err != nil {
+		return nil, err
+	}
+
+	params := &CkmeansParams{
+		year:     year,
+		catcodes: catcodes,
+		geotypes: geotypes,
+		divideBy: divideBy,
+		k:        k,
+		db:       app.db.DB(),
 		breaks:   map[string]map[string][]float64{},
 	}
+
+	if divideBy == "" {
+		err = params.nonratio(ctx)
+	} else {
+		err = params.ratio(ctx)
+	}
+	if err != nil {
+		params.breaks = nil
+	}
+	return params.breaks, err
 }
 
-// ------------------------------------------------- main ----------------------------------------------------------- //
+// nonratio calculates ckmeans over geotype-category metrics directly.
+func (params *CkmeansParams) nonratio(ctx context.Context) error {
+	values := []float64{}
+	metrics := map[string]float64{}
+	for _, geotype := range params.geotypes {
+		for _, catcode := range params.catcodes {
+			if err := params.loadMetrics(ctx, geotype, catcode, metrics); err != nil {
+				return err
+			}
+			if len(metrics) == 0 {
+				params.breaks = map[string]map[string][]float64{} // special case
+				return nil
+			}
 
-// CKmeans does an 'all rows' query for census data using sql generator from geodata pkg, parses the results by
-// category and then by geotype, and gets ckmeans breaks for each geotype in each category. Optionally, if divideBy
-// is not blank, will divide all categories by the cateogry indicated by the divideBy value, prior to getting ckmeans
-// breaks.
-//
-func (app *Geodata) CKmeans(ctx context.Context, year int, cat []string, geotype []string, k int, divideBy string) (map[string]map[string][]float64, error) {
-	// initialise
-	ckparser := NewCkmeansParser(divideBy, k)
+			values = values[:0] // reuse existing slice
+			for _, value := range metrics {
+				values = append(values, value)
+			}
 
-	// parse and validate tokens
-	if err := ckparser.parseCat(cat); err != nil {
-		return nil, err
+			if err := params.collectStats(values, geotype, catcode); err != nil {
+				return err
+			}
+		}
 	}
-	if err := ckparser.parseValidateGeotype(geotype); err != nil {
-		return nil, err
-	}
+	return nil
+}
 
-	// get sql
-	sql, err := getCkmeansSQL(ctx, year, ckparser)
+// ratio calculates ckmeans over the ratio of geotype-category metrics to the
+// metrics of geotype-divideBy.
+func (params *CkmeansParams) ratio(ctx context.Context) error {
+	values := []float64{}
+	denominator := map[string]float64{}
+	numerator := map[string]float64{}
+	for _, geotype := range params.geotypes {
+		if err := params.loadMetrics(ctx, geotype, params.divideBy, denominator); err != nil {
+			return err
+		}
+		if len(denominator) == 0 {
+			params.breaks = map[string]map[string][]float64{} // special case
+			return nil
+		}
+
+		for _, catcode := range params.catcodes {
+			if err := params.loadMetrics(ctx, geotype, catcode, numerator); err != nil {
+				return err
+			}
+			if len(numerator) == 0 || len(numerator) != len(denominator) {
+				return fmt.Errorf("%w: %s %s", sentinel.ErrPartialContent, geotype, catcode)
+			}
+
+			values = values[:0] // reuse existing slice
+			for geocode, d := range denominator {
+				if d == 0 {
+					return fmt.Errorf("%w: %s %s %s == 0", sentinel.ErrInvalidParams, geotype, catcode, geocode)
+				}
+				n, ok := numerator[geocode]
+				if !ok {
+					return fmt.Errorf("%w: %s %s %s", sentinel.ErrPartialContent, geotype, catcode, geocode)
+				}
+				values = append(values, n/d)
+			}
+
+			if err := params.collectStats(values, geotype, catcode); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// collectStats calculates statistics on metrics (ckmeans, min, max) and saves the results
+// against geotype and catcode.
+func (params *CkmeansParams) collectStats(metrics []float64, geotype, catcode string) error {
+	catBreaks, err := getBreaks(metrics, params.k)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	// query for data
-	t := timer.New("query")
-	t.Start()
-	rows, err := app.db.DB().QueryContext(ctx, sql)
-	if err != nil {
-		return nil, err
+	cc, ok := params.breaks[catcode]
+	if !ok {
+		cc = map[string][]float64{}
 	}
-	t.Stop()
-	t.Log(ctx)
+	cc[geotype] = catBreaks
+	cc[geotype+"_min_max"] = getMinMax(metrics)
+	params.breaks[catcode] = cc
+	return nil
+}
+
+var ckquery = `
+SELECT
+	geo.code AS geography_code,
+	geo_metric.metric AS value
+FROM
+	geo,
+	geo_type,
+	geo_metric,
+	data_ver,
+	nomis_category
+WHERE geo.valid
+AND geo_type.id = geo.type_id
+AND geo_type.name = $1
+AND geo_metric.geo_id = geo.id
+AND data_ver.id = geo_metric.data_ver_id
+AND data_ver.census_year = $2
+AND data_ver.ver_string = '2.2'
+AND nomis_category.id = geo_metric.category_id
+AND nomis_category.year = data_ver.census_year
+AND nomis_category.long_nomis_code = $3
+`
+
+// loadMetrics retrieves metrics for geotype and catcode and places them in result.
+// Result keys are geocodes and the metric values are the map values.
+func (params *CkmeansParams) loadMetrics(ctx context.Context, geotype, catcode string, result map[string]float64) error {
+	var err error
+	rows, err := params.db.QueryContext(ctx, ckquery, geotype, params.year, catcode)
+	if err != nil {
+		return err
+	}
 	defer rows.Close()
 
-	// scan data from rows
-	tnext := timer.New("next")
-	tscan := timer.New("scan")
-	for {
-		tnext.Start()
-		ok := rows.Next()
-		tnext.Stop()
-
-		if !ok {
-			// return blank if we found no data at all
-			if ckparser.nmetrics == 0 {
-				return ckparser.breaks, err
-			}
-			// ensure last chunk is processed
-			if err := ckparser.processChunk(); err != nil {
-				return nil, err
-			}
-			break
-		}
-
-		// consume row data
-		if err := ckparser.processRow(rows, tscan); err != nil {
-			return nil, err
-		}
+	var k string
+	for k = range result {
+		delete(result, k)
 	}
-	tnext.Log(ctx)
-	tscan.Log(ctx)
+	var geocode string
+	var value float64
+	for rows.Next() {
+		if err = rows.Scan(&geocode, &value); err != nil {
+			return err
+		}
+		result[geocode] = value
+	}
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return err
 	}
 
-	if err = ckparser.processBreaks(); err != nil {
-		return nil, err
-	}
-	return ckparser.breaks, nil
+	return nil
 }
 
-// ---------------------------------------------- CkmeansParser methods --------------------------------------------- //
-
-// CkmeansParser.parseCat parses single values and combines with split comma-seperated cat values and returns as array.
+// parseCat parses single values and combines with split comma-seperated cat values and returns as array.
 // Will return error if any cat range values (cat1..cat2) are found (for error handling we need to know
 // explicitly beforehand which cats to expect in our results)
 //
-func (ckparser *CkmeansParser) parseCat(cat []string) error {
+func parseCat(cat []string) ([]string, error) {
 	catset, err := where.ParseMultiArgs(cat)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if catset.Ranges != nil {
-		return fmt.Errorf("%w: ckmeans endpoint does not accept range values for cats", sentinel.ErrInvalidParams)
+		return nil, fmt.Errorf("%w: ckmeans endpoint does not accept range values for cats", sentinel.ErrInvalidParams)
 	}
-	ckparser.catcodes = catset.Singles
-	return nil
+	return catset.Singles, nil
 }
 
-// CkmeansParser.parseValidateGeotype arses single values and combines with split comma-seperated geotype values
+// parseValidateGeotype parses single values and combines with split comma-seperated geotype values
 // and returns as array. Any badly-cased geotype values will be corrected, and any unrecognised geotype
 // value will cause an error to be returned.
 //
-func (ckparser *CkmeansParser) parseValidateGeotype(geotype []string) error {
+func parseValidateGeotype(geotype []string) ([]string, error) {
 	geoset, err := where.ParseMultiArgs(geotype)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	geoset, err = MapGeotypes(geoset)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	ckparser.geotypes = geoset.Singles
-	return nil
-}
-
-// CkmeansParser.processRow loads data from a sql.Row into a Chunk containing data from a single geotype and geocode
-// (NB this only works because the SQL returned by getCkmeansSQL orders by geocode). If the current row contains data
-// from a different geotype or geocode, the Chunk is considered complete and is processed and reset.
-//
-func (ckparser *CkmeansParser) processRow(rows *sql.Rows, tscan *timer.Timer) error {
-	// read data from row
-	var rowCatcode string
-	var rowMetric float64
-
-	tscan.Start()
-	err := rows.Scan(&ckparser.rowGeocode, &ckparser.rowGeotype, &rowCatcode, &rowMetric)
-	tscan.Stop()
-	if err != nil {
-		return err
-	}
-
-	// reset chunk with new geo and geotype if this is the first row we've read
-	if ckparser.nmetrics == 0 {
-		ckparser.resetChunk()
-	}
-
-	// if geotype OR geoID changes then we have reached the end of a chunk and should process it.
-	// NB - geotype will change WITHOUT geoID changing if we only have one category, so check both
-	if ckparser.isChunkComplete() {
-		if err := ckparser.processChunk(); err != nil {
-			return err
-		}
-	}
-
-	// otherwise collect results - ordered by geo, so should come in chunks
-	ckparser.addToChunk(rowCatcode, rowMetric)
-	ckparser.nmetrics++
-	return nil
-}
-
-// CkmeansParser.processChunk parses data from a Chunk containing required category data for single geotype and geocode
-// into the main CkmeansParser.metrics container. If CkmeansParser.divideBy is not blank, all categories will be
-// divided by the divideBy category before being stored. Chunk is reset after data has been processed from it.
-//
-func (ckparser *CkmeansParser) processChunk() error {
-	// check divideBy if doing ratios
-	metricDenominator, prs := ckparser.chunk.metrics[ckparser.divideBy]
-	if !prs && ckparser.divideBy != "" {
-		return fmt.Errorf("Incomplete data for category %s: %w", ckparser.divideBy, sentinel.ErrPartialContent)
-	}
-
-	// process all other required catcodes
-	for _, catcode := range ckparser.catcodes {
-
-		// check catcode has metric
-		metricCatcode, prs := ckparser.chunk.metrics[catcode]
-		if !prs {
-			return fmt.Errorf("Incomplete data for category %s: %w", catcode, sentinel.ErrPartialContent)
-		}
-
-		// derive or get metric
-		var outputMetric float64
-		if ckparser.divideBy != "" {
-			// make ratio if doing that
-			outputMetric = metricCatcode / metricDenominator
-		} else {
-			// otherwise just use data as is
-			outputMetric = metricCatcode
-		}
-
-		// append to metrics
-		if _, prs := ckparser.metrics[catcode]; !prs {
-			ckparser.metrics[catcode] = map[string][]float64{}
-		}
-		ckparser.metrics[catcode][ckparser.chunk.geotype] = append(ckparser.metrics[catcode][ckparser.chunk.geotype], outputMetric)
-	}
-
-	// reset chunk
-	ckparser.resetChunk()
-	return nil
-}
-
-// CkmeansParser.isChunkComplete returns True if CkmeansParser.Chunk contains data from a different geotype or geocode
-// from the sql.Row CkmeansParser is currently processing.
-//
-func (ckparser *CkmeansParser) isChunkComplete() bool {
-	// if geotype OR geoID changes then we have reached the end of a chunk and should process it.
-	// NB - geotype will change WITHOUT geoID changing if we only have one category, so check both
-	return ckparser.rowGeotype != ckparser.chunk.geotype || ckparser.rowGeocode != ckparser.chunk.geocode
-}
-
-// CkmeansParser.addToChunk adds data for a new category code to CkmeansParser.Chunk
-//
-func (ckparser *CkmeansParser) addToChunk(catcode string, metric float64) {
-	ckparser.chunk.metrics[catcode] = metric
-}
-
-// CkmeansParser.resetChunk deletes all data from CkmeansParser.Chunk and sets the Chunk geotype and geocode to that of
-// the sql.Row that CkmeansParser is currently processing.
-//
-func (ckparser *CkmeansParser) resetChunk() {
-	for k := range ckparser.chunk.metrics {
-		delete(ckparser.chunk.metrics, k)
-	}
-	ckparser.chunk.geocode = ckparser.rowGeocode
-	ckparser.chunk.geotype = ckparser.rowGeotype
-}
-
-// CkmeansParser.processBreaks crawls through CkmeansParser.metrics and runs getBreaks on each geotype's data for each
-// category, storing the results in CkmeansParser.breaks
-//
-func (ckparser *CkmeansParser) processBreaks() error {
-	if ckparser.nmetrics == 0 {
-		return nil
-	}
-	for _, catcode := range ckparser.catcodes {
-		for _, geotype := range ckparser.geotypes {
-			catBreaks, err := getBreaks(ckparser.metrics[catcode][geotype], ckparser.k)
-			catMaxMin := getMinMax(ckparser.metrics[catcode][geotype])
-			if err != nil {
-				return err
-			}
-			// append to breaks
-			if _, prs := ckparser.breaks[catcode]; !prs {
-				ckparser.breaks[catcode] = map[string][]float64{}
-			}
-			ckparser.breaks[catcode][geotype] = catBreaks
-			ckparser.breaks[catcode][geotype+"_min_max"] = catMaxMin
-		}
-	}
-	return nil
-}
-
-// ---------------------------------------------- functions --------------------------------------------------------- //
-
-// getCkmeansSQL validates supplied arguments and then generates SQL for ckmeans query. This is mostly the same as the
-// SQL used for a general rows=all query with a geotype filter, but with an additional clause to order results by
-// geocode (this is needed to process data in chunks)
-//
-func getCkmeansSQL(ctx context.Context, year int, ckparser *CkmeansParser) (string, error) {
-	// make 'cols' arg for using CensusQuerySQL (cats plus divide_by, if present)
-	cols := make([]string, len(ckparser.catcodes))
-	copy(cols, ckparser.catcodes)
-	if ckparser.divideBy != "" {
-		cols = append(cols, ckparser.divideBy)
-	}
-
-	// get sql
-	sql, _, err := CensusQuerySQL(
-		ctx,
-		CensusQuerySQLArgs{
-			Year:     year,
-			Geos:     []string{"all"},
-			Geotypes: ckparser.geotypes,
-			Cols:     cols,
-		},
-	)
-
-	// append ORDER_BY to allow chunking of data
-	sql = sql + `
-	ORDER BY
-		geo.id ASC;
-	`
-	return sql, err
+	return geoset.Singles, nil
 }
 
 // getBreaks gets k ckmeans clusters from metrics and returns the upper breakpoints for each cluster.
