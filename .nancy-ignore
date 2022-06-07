@@ -1,5 +1,19 @@
 CVE-2020-26160 # No upgrade path for github.com/dgrijalva/jwt-go. See: https://ossindex.sonatype.org/vulnerability/c16fb56d-9de6-4065-9fca-d2b4cfb13020?component-type=golang&component-name=github.com%2Fdgrijalva%2Fjwt-go&utm_source=nancy-client&utm_medium=integration&utm_content=0.0.0-dev
 
-CVS-2022-29153  # for indirect dependencies of hashicorp/consul/api@v1.1.0 and hashicorp/consul/sdk@v0.1.1
+CVE-2022-29153  # indirect dependencies of hashicorp/consul/api@v1.1.0 and hashicorp/consul/sdk@v0.1.1
 
 sonatype-2021-0853 # cockroachdb/copyist@v1.4.1 wants jackc/pgproto3@v1.1.0
+
+sonatype-2021-1401 # indirect github.com/miekg/dns@v1.0.14
+
+CVE-2021-41190 # indirect github.com/opencontainers/image-spec@v1.0.1
+
+CVE-2021-30465 # indirect github.com/opencontainers/runc@v1.0.0-rc9
+
+CVE-2022-29162 # indirect github.com/opencontainers/runc@v1.0.0-rc9
+
+sonatype-2020-0569 # indirect github.com/opencontainers/runc@v1.0.0-rc9
+
+CVE-2021-43784 # indirect github.com/opencontainers/runc@v1.0.0-rc9
+
+sonatype-2019-0890 # indirect github.com/pkg/sftp@v1.10.1
