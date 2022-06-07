@@ -473,6 +473,14 @@ paths:
           name: censustable
           schema:
             type: string
+        - in: query
+          name: divide_by
+          description: |
+            (OPTIONAL) - census data category to use as denominator (cat/divide_by).
+            When divide_by is given, the returned value for a category will be the value of the category divided by the value of the
+            divide_by category.
+          schema:
+            type: string
       responses:
         200:
           content:

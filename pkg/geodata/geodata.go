@@ -33,15 +33,15 @@ func New(db *database.Database, cant *cantabular.Client, maxMetrics int) (*Geoda
 	}, nil
 }
 
-func (app *Geodata) Query(ctx context.Context, year int, bbox, location string, radius int, polygon string, geotypes, rows, cols []string, censustable string) (string, error) {
-	return app.censusQuery(ctx, year, rows, bbox, location, radius, polygon, geotypes, cols, censustable)
+func (app *Geodata) Query(ctx context.Context, year int, bbox, location string, radius int, polygon string, geotypes, rows, cols []string, censustable, divideby string) (string, error) {
+	return app.censusQuery(ctx, year, rows, bbox, location, radius, polygon, geotypes, cols, censustable, divideby)
 }
 
 // collectCells runs the query in sql and returns the results as a csv.
 // sql must be a query against the geo_metric table selecting exactly
 // code, category and metric.
 //
-func (app *Geodata) collectCells(ctx context.Context, sql string, include []string) (string, error) {
+func (app *Geodata) collectCells(ctx context.Context, sql string, include []string, divideby string) (string, error) {
 	// Allocate output table
 	//
 	tbl := table.New()
@@ -104,6 +104,11 @@ func (app *Geodata) collectCells(ctx context.Context, sql string, include []stri
 
 	tgen := timer.New("generate")
 	tgen.Start()
+	if divideby != "" {
+		if err = tbl.DivideBy(divideby); err != nil {
+			return "", err
+		}
+	}
 	err = tbl.Generate(&body, include)
 	tgen.Stop()
 	tgen.Log(ctx)
@@ -124,6 +129,7 @@ type CensusQuerySQLArgs struct {
 	Geotypes    []string
 	Cols        []string
 	Censustable string
+	DivideBy    string
 }
 
 // censusQuery is the merged query which is the logical OR of the other specific queries.
@@ -134,7 +140,7 @@ type CensusQuerySQLArgs struct {
 // Although this query method is not complicated, it is too long.
 // Break it up in the fullness of time.
 //
-func (app *Geodata) censusQuery(ctx context.Context, year int, geos []string, bbox, location string, radius int, polygon string, geotypes, cols []string, censustable string) (string, error) {
+func (app *Geodata) censusQuery(ctx context.Context, year int, geos []string, bbox, location string, radius int, polygon string, geotypes, cols []string, censustable, divideby string) (string, error) {
 
 	sql, include, err := CensusQuerySQL(
 		ctx,
@@ -148,6 +154,7 @@ func (app *Geodata) censusQuery(ctx context.Context, year int, geos []string, bb
 			Geotypes:    geotypes,
 			Cols:        cols,
 			Censustable: censustable,
+			DivideBy:    divideby,
 		},
 	)
 	if err != nil {
@@ -156,7 +163,7 @@ func (app *Geodata) censusQuery(ctx context.Context, year int, geos []string, bb
 
 	log.Info(ctx, "sql", log.Data{"query": sql})
 
-	return app.collectCells(ctx, sql, include)
+	return app.collectCells(ctx, sql, include, divideby)
 }
 
 func CensusQuerySQL(ctx context.Context, args CensusQuerySQLArgs) (sql string, include []string, err error) {
@@ -219,6 +226,11 @@ func CensusQuerySQL(ctx context.Context, args CensusQuerySQLArgs) (sql string, i
 	include, catset, err = ExtractSpecialCols(catset)
 	if err != nil {
 		return sql, include, err
+	}
+
+	// ensure divideby is in catset
+	if args.DivideBy != "" {
+		catset.AddSingle(args.DivideBy)
 	}
 
 	// construct WHERE condition for categories

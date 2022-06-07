@@ -161,6 +161,11 @@ type GetQueryYearParams struct {
 	// way of selecting geography.
 	Polygon     *string `json:"polygon,omitempty"`
 	Censustable *string `json:"censustable,omitempty"`
+
+	// (OPTIONAL) - census data category to use as denominator (cat/divide_by).
+	// When divide_by is given, the returned value for a category will be the value of the category divided by the value of the
+	// divide_by category.
+	DivideBy *string `json:"divide_by,omitempty"`
 }
 
 // GetQueryParams defines parameters for GetQuery.
@@ -637,6 +642,17 @@ func (siw *ServerInterfaceWrapper) GetQueryYear(w http.ResponseWriter, r *http.R
 	err = runtime.BindQueryParameter("form", true, false, "censustable", r.URL.Query(), &params.Censustable)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Invalid format for parameter censustable: %s", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Optional query parameter "divide_by" -------------
+	if paramValue := r.URL.Query().Get("divide_by"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "divide_by", r.URL.Query(), &params.DivideBy)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Invalid format for parameter divide_by: %s", err), http.StatusBadRequest)
 		return
 	}
 

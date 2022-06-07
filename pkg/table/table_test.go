@@ -7,14 +7,14 @@ import (
 	"github.com/ONSdigital/dp-geodata-api/pkg/table"
 )
 
-func TestGenerate(t *testing.T) {
-	type row struct {
-		geo     string
-		geotype string
-		cat     string
-		val     float64
-	}
+type row struct {
+	geo     string
+	geotype string
+	cat     string
+	val     float64
+}
 
+func TestGenerate(t *testing.T) {
 	inputSingleCategory := []row{
 		{"geo", "type", "cat", 1.23},
 	}
@@ -189,5 +189,52 @@ func TestGenerate(t *testing.T) {
 		if buf.String() != test.want {
 			t.Errorf("%s:\n%s\nwant:\n%s\n", test.desc, buf.String(), test.want)
 		}
+	}
+}
+
+func Test_DivideBy_Error(t *testing.T) {
+	inputZeroDenom := []row{
+		{"geo", "type", "cat2", 1},
+		{"geo", "type", "cat1", 0},
+	}
+
+	tbl := table.New()
+	for _, r := range inputZeroDenom {
+		tbl.SetCell(r.geo, r.geotype, r.cat, r.val)
+	}
+
+	if err := tbl.DivideBy("cat1"); err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func Test_DivideBy(t *testing.T) {
+	input := []row{
+		{"geo1", "type", "cat1", 10},
+		{"geo1", "type", "cat2", 5},
+		{"geo2", "type", "cat1", 12},
+		{"geo2", "type", "cat2", 3},
+	}
+
+	tbl := table.New()
+	for _, r := range input {
+		tbl.SetCell(r.geo, r.geotype, r.cat, r.val)
+	}
+
+	if err := tbl.DivideBy("cat1"); err != nil {
+		t.Fatal(err)
+	}
+
+	var buf strings.Builder
+	if err := tbl.Generate(&buf, []string{"geography_code", "cat2"}); err != nil {
+		t.Fatal(err)
+	}
+
+	want := `geography_code,cat2
+geo1,0.5
+geo2,0.25
+`
+	if buf.String() != want {
+		t.Errorf("%s\nwant: %s\n", buf.String(), want)
 	}
 }

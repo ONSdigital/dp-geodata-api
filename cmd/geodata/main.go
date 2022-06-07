@@ -74,12 +74,13 @@ func query(ctx context.Context, app *geodata.Geodata, argv []string) {
 	radius := flagset.Int("radius", 0, "radius in meters")
 	polygon := flagset.String("polygon", "", "polygon x1,y1,...,x1,y1 (closed linestring)")
 	censustable := flagset.String("censustable", "", "censustable QS802EW 'nomis table' / grouping of census data categories")
+	divideby := flagset.String("divideby", "", "category to divide by")
 	flagset.Var(&geotypes, "geotype", "geography types (LSOA, LAD, etc)")
 	flagset.Var(&rows, "rows", "row or row range")
 	flagset.Var(&cols, "cols", "column name(s) to return")
 	flagset.Parse(argv)
 
-	body, err := app.Query(ctx, *year, *bbox, *location, *radius, *polygon, geotypes, rows, cols, *censustable)
+	body, err := app.Query(ctx, *year, *bbox, *location, *radius, *polygon, geotypes, rows, cols, *censustable, *divideby)
 	if err != nil {
 		log.Fatalln(err)
 	}

@@ -120,6 +120,7 @@ func (svr *Server) GetQueryYear(w http.ResponseWriter, r *http.Request, year int
 		var radius int
 		var polygon string
 		var censustable string
+		var divideby string
 		if params.Rows != nil {
 			rows = *params.Rows
 		}
@@ -144,9 +145,12 @@ func (svr *Server) GetQueryYear(w http.ResponseWriter, r *http.Request, year int
 		if params.Censustable != nil {
 			censustable = *params.Censustable
 		}
+		if params.DivideBy != nil {
+			divideby = *params.DivideBy
+		}
 
 		ctx := r.Context()
-		csv, err := svr.querygeodata.Query(ctx, year, bbox, location, radius, polygon, geotype, rows, cols, censustable)
+		csv, err := svr.querygeodata.Query(ctx, year, bbox, location, radius, polygon, geotype, rows, cols, censustable, divideby)
 		return []byte(csv), err
 	}
 

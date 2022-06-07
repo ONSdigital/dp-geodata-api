@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"io"
 	"sort"
+
+	"github.com/ONSdigital/dp-geodata-api/sentinel"
 )
 
 const (
@@ -75,6 +77,25 @@ func (tbl *Table) SetCell(geocode, geotype, catcode string, value float64) {
 
 	// Set this geo/type/cat value
 	a.metrics[Catcode(catcode)] = value
+}
+
+// DivideBy divides the values in each column by the corresponding value in the divideby column.
+func (tbl *Table) DivideBy(divideby string) error {
+	for geocode, area := range tbl.areas {
+		denom := area.metrics[Catcode(divideby)]
+		if denom == 0 {
+			return fmt.Errorf("%w: %s %s is zero", sentinel.ErrInvalidParams, geocode, divideby)
+		}
+		for catcode, value := range area.metrics {
+			if catcode == Catcode(divideby) {
+				delete(area.metrics, catcode)
+			} else {
+				area.metrics[catcode] = value / denom
+			}
+		}
+	}
+	delete(tbl.catcodes, Catcode(divideby))
+	return nil
 }
 
 // Generate produces a CSV version of the table on w.
