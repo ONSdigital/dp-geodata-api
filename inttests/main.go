@@ -199,6 +199,20 @@ var Tests = []APITest{
 		ckmeansEndpoint,
 		"cat=noexist&geotype=LSOA&k=5",
 	},
+	{
+		"simple ckmeans ratio",
+		ckmeansEndpoint,
+		"divide_by=QS501EW0001&cat=QS501EW0002&geotype=oa&k=5",
+	},
+	// This test is too big for our current containers, but it works
+	// against a local api.
+	/*
+		{
+			"large ckmeans request",
+			ckmeansEndpoint,
+			"divide_by=QS501EW0001&cat=QS501EW0002,QS501EW0003,QS501EW0004,QS501EW0006,QS501EW0007,QS501EW0005,QS501EW0008&geotype=oa&k=5",
+		},
+	*/
 	// geo
 	{
 		"geo",
