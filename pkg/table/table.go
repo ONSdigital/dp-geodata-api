@@ -40,6 +40,7 @@ type Table struct {
 	geocodes map[Geocode]bool // geography codes seen
 	catcodes map[Catcode]bool // category codes seen
 	areas    map[Geocode]area // areas indexed by geography code
+	isRatio  bool             // true if we want a ratio query
 }
 
 type area struct {
@@ -81,20 +82,40 @@ func (tbl *Table) SetCell(geocode, geotype, catcode string, value float64) {
 
 // DivideBy divides the values in each column by the corresponding value in the divideby column.
 func (tbl *Table) DivideBy(divideby string) error {
-	for geocode, area := range tbl.areas {
-		denom := area.metrics[Catcode(divideby)]
-		if denom == 0 {
-			return fmt.Errorf("%w: %s %s is zero", sentinel.ErrInvalidParams, geocode, divideby)
-		}
-		for catcode, value := range area.metrics {
+	newareas := map[Geocode]area{}
+
+	for geocode, a := range tbl.areas {
+		var total, value float64
+		for catcode, v := range a.metrics {
 			if catcode == Catcode(divideby) {
-				delete(area.metrics, catcode)
+				total = v
 			} else {
-				area.metrics[catcode] = value / denom
+				value = v
 			}
 		}
+		if total == 0 {
+			return fmt.Errorf("%w: %s %s is zero", sentinel.ErrInvalidParams, geocode, divideby)
+		}
+
+		newarea := area{
+			geotype: a.geotype,
+			metrics: map[Catcode]float64{
+				"value":      value,
+				"total":      total,
+				"percentage": value / total,
+			},
+		}
+
+		newareas[geocode] = newarea
 	}
-	delete(tbl.catcodes, Catcode(divideby))
+
+	tbl.catcodes = map[Catcode]bool{
+		"value":      true,
+		"total":      true,
+		"percentage": true,
+	}
+	tbl.areas = newareas
+	tbl.isRatio = true
 	return nil
 }
 
@@ -112,15 +133,20 @@ func (tbl *Table) Generate(w io.Writer, include []string) error {
 	}
 	geocodes.Sort()
 
-	// sort the category codes we have seen
+	// if we are not doing a ratio query, sort the category codes we have seen
 	catcodes := sort.StringSlice{}
 	for cat := range tbl.catcodes {
 		catcodes = append(catcodes, string(cat))
 	}
-	catcodes.Sort()
+	if !tbl.isRatio {
+		catcodes.Sort()
+	}
 
 	// note which non-category columns we want to include
 	// XXX make it an error on unrecognized columns
+	if tbl.isRatio {
+		include = []string{ColGeographyCode}
+	}
 	includeGeocode := false
 	includeGeotype := false
 	for _, col := range include {
@@ -163,7 +189,11 @@ func (tbl *Table) Generate(w io.Writer, include []string) error {
 			// Precision may need to be increased if numbers are printed as exponents,
 			// or if decimals are rounded
 			// See the "specific numeric formatting tests" in table_test.go.
-			row = append(row, fmt.Sprintf("%.13g", tbl.areas[Geocode(geocode)].metrics[Catcode(catcode)]))
+			format := "%.13g"
+			if tbl.isRatio {
+				format = "%.3g" // we "know" ratios will always be <1.0
+			}
+			row = append(row, fmt.Sprintf(format, tbl.areas[Geocode(geocode)].metrics[Catcode(catcode)]))
 		}
 
 		cw.Write(row)

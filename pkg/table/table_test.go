@@ -226,13 +226,13 @@ func Test_DivideBy(t *testing.T) {
 	}
 
 	var buf strings.Builder
-	if err := tbl.Generate(&buf, []string{"geography_code", "cat2"}); err != nil {
+	if err := tbl.Generate(&buf, nil); err != nil {
 		t.Fatal(err)
 	}
 
-	want := `geography_code,cat2
-geo1,0.5
-geo2,0.25
+	want := `geography_code,value,total,percentage
+geo1,5,10,0.5
+geo2,3,12,0.25
 `
 	if buf.String() != want {
 		t.Errorf("%s\nwant: %s\n", buf.String(), want)

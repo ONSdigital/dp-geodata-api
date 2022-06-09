@@ -417,6 +417,80 @@ AND nomis_category.year = data_ver.census_year
  -- category conditions:
 `,
 		},
+		{
+			desc: "reject special column in ratio query",
+			args: geodata.CensusQuerySQLArgs{
+				Geos:     []string{"E00009767"},
+				Cols:     []string{"geography_code", "KS103EW0002"},
+				DivideBy: "KS103EW0001",
+			},
+			wantErr: sentinel.ErrInvalidParams,
+		},
+		{
+			desc: "reject multiple categories in ratio query",
+			args: geodata.CensusQuerySQLArgs{
+				Geos:     []string{"E00009767"},
+				Cols:     []string{"KS103EW0002", "KS103EW0003"},
+				DivideBy: "KS103EW0001",
+			},
+			wantErr: sentinel.ErrInvalidParams,
+		},
+		{
+			desc: "reject category ranges in ratio query",
+			args: geodata.CensusQuerySQLArgs{
+				Geos:     []string{"E00009767"},
+				Cols:     []string{"KS103EW0002...KS103EW0003"},
+				DivideBy: "KS103EW0001",
+			},
+			wantErr: sentinel.ErrInvalidParams,
+		},
+		{
+			desc: "reject same category as divide_by in ratio query",
+			args: geodata.CensusQuerySQLArgs{
+				Geos:     []string{"E00009767"},
+				Cols:     []string{"KS103EW0001"},
+				DivideBy: "KS103EW0001",
+			},
+			wantErr: sentinel.ErrInvalidParams,
+		},
+		{
+			desc: "ratio query includes category and divide_by in sql",
+			args: geodata.CensusQuerySQLArgs{
+				Geos:     []string{"E00009767"},
+				Cols:     []string{"KS103EW0002"},
+				DivideBy: "KS103EW0001",
+			},
+			wantSQL: `
+SELECT
+ geo.code AS geography_code,
+ geo_type.name AS geotype,
+ nomis_category.long_nomis_code AS category_code,
+ geo_metric.metric AS value
+FROM
+ geo,
+ geo_type,
+ geo_metric,
+ data_ver,
+ nomis_category
+WHERE geo.valid
+AND geo_type.id = geo.type_id
+ -- geotype conditions:
+ -- geo conditions:
+AND (
+ geo.code IN ( 'E00009767' )
+)
+AND geo_metric.geo_id = geo.id
+AND data_ver.id = geo_metric.data_ver_id
+AND data_ver.census_year = 0
+AND data_ver.ver_string = '2.2'
+AND nomis_category.id = geo_metric.category_id
+AND nomis_category.year = data_ver.census_year
+ -- category conditions:
+AND (
+ nomis_category.long_nomis_code IN ( 'KS103EW0002', 'KS103EW0001' )
+)
+`,
+		},
 	}
 	for _, test := range tests {
 		ctx := context.Background()

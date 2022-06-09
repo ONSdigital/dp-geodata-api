@@ -108,6 +108,7 @@ func (app *Geodata) collectCells(ctx context.Context, sql string, include []stri
 		if err = tbl.DivideBy(divideby); err != nil {
 			return "", err
 		}
+		include = []string{"geography_code"}
 	}
 	err = tbl.Generate(&body, include)
 	tgen.Stop()
@@ -228,8 +229,17 @@ func CensusQuerySQL(ctx context.Context, args CensusQuerySQLArgs) (sql string, i
 		return sql, include, err
 	}
 
-	// ensure divideby is in catset
+	// if we are doing a ratio query, there can only be a single category
 	if args.DivideBy != "" {
+		if len(include) != 0 {
+			return "", nil, fmt.Errorf("%w: cannot include special columns in divide_by queries", sentinel.ErrInvalidParams)
+		}
+		if len(catset.Singles) != 1 || len(catset.Ranges) != 0 {
+			return "", nil, fmt.Errorf("%w: divide_by queries must supply a single category only", sentinel.ErrInvalidParams)
+		}
+		if catset.Singles[0] == args.DivideBy {
+			return "", nil, fmt.Errorf("%w: category and divide_by must be different", sentinel.ErrInvalidParams)
+		}
 		catset.AddSingle(args.DivideBy)
 	}
 
