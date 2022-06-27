@@ -9,10 +9,11 @@ replace (
 
 require (
 	github.com/ONSdigital/dp-api-clients-go v1.43.0
+	github.com/ONSdigital/dp-api-clients-go/v2 v2.143.0
 	github.com/ONSdigital/dp-component-test v0.7.0
 	github.com/ONSdigital/dp-healthcheck v1.2.3
-	github.com/ONSdigital/dp-net v1.4.1
-	github.com/ONSdigital/log.go/v2 v2.2.0
+	github.com/ONSdigital/dp-net v1.4.0
+	github.com/ONSdigital/log.go/v2 v2.1.0
 	github.com/allegro/bigcache/v3 v3.0.1
 	github.com/aws/aws-sdk-go v1.42.47
 	github.com/cockroachdb/copyist v1.4.1
@@ -21,6 +22,7 @@ require (
 	github.com/eko/gocache/v2 v2.2.0
 	github.com/getkin/kin-openapi v0.86.0
 	github.com/go-chi/chi/v5 v5.0.4
+	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/gosimple/slug v1.12.0
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/jszwec/csvutil v1.6.0
@@ -41,9 +43,7 @@ require (
 )
 
 require (
-	github.com/ONSdigital/dp-api-clients-go/v2 v2.92.2 // indirect
 	github.com/ONSdigital/dp-mongodb-in-memory v1.2.0 // indirect
-	github.com/ONSdigital/dp-net/v2 v2.0.0 // indirect
 	github.com/XiaoMi/pegasus-go-client v0.0.0-20210427083443-f3b6b08bc4c2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b // indirect

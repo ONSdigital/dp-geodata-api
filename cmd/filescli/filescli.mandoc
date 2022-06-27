@@ -1,0 +1,314 @@
+.Dd $Mdocdate$
+.Dt NAME 1
+.Os
+.Sh NAME
+.Nm filescli
+.Nd command line interface to static files services
+
+.Sh SYNOPSIS
+.Nm
+.Op Fl C Ar config
+.Ar subcommand
+.Ar args
+
+Subcommands:
+
+.Cm upload
+.Op Fl c Ar collection-id
+.Op Fl m Ar mime-type
+.Fl t Ar title
+.Op Fl p Ar ispublishable
+.Op Fl l Ar license-type
+.Op Fl L Ar license-URL
+.Ar local-path
+.Ar remote-path
+
+.Cm setid
+.Fl c Ar collection-id
+.Ar remote-path
+
+.Cm getstate
+.Ar remote-path
+
+.Cm publish
+.Fl c Ar collection-id
+
+.Cm getpub
+.Ar remote-path
+
+.Cm getweb
+.Ar remote-path
+.Sh DESCRIPTION
+filescli interacts with Static Files related services to:
+.Bl -bullet
+.It
+upload files
+.It
+assign a collection id to an uploaded file
+.It
+get the state of an uploaded file
+.It
+publish an uploaded file
+.It
+ownload a file from the Web or Publish environments
+.El
+
+.Ar config
+is the name of a config file holding service URLs.
+This defaults to
+.Pa config.yml
+in the current directory.
+It is a YAML file that should look like this:
+.Bd -literal -offset indent
+hosts:
+  zebedee: http://localhost:8082
+  files: http://localhost:26900
+  download-publishing: http://localhost:23600
+  download-web: http://localhost:23601
+  identity: http://localhost:25600
+  upload: http://localhost:25100
+.Ed
+
+.Ss upload
+The
+.Cm upload
+subcommand uploads
+.Ar local-path
+to
+.Ar remote-path.
+.Ar local-path
+must be a regular file.
+.Ar remote-path
+includes the full directory on the remote side, but it must not be an absolute path.
+For example, you can say
+.Pa dir/file.txt
+but you can't say
+.Pa /dir/file.txt .
+The directory isn't required, you can pass just a filename.
+
+.Ar collection-id
+is an optional collection id you can assign to the uploaded file.
+If you do not assign a collection id here, you can use the
+.Cm setid
+subcommand later.
+
+.Ar mime-type
+specifies the mime type to be recorded against the file.
+It is a string like
+.Ql application/json .
+If you don't specify a mime type, one will be guessed based on the contents of the file.
+Guessing can be unreliable, so it is better always to give a mime type.
+(See
+.Pa https://pkg.go.dev/net/http#DetectContentType )
+
+.Ar title
+is required.
+
+.Ar ispublishable
+is a boolean
+.Ql true
+or
+.Ql false ,
+defaults to
+.Ql false.
+
+.Ar license-type
+is a string like
+.Ql MIT
+or
+.Ql BSD .
+It defaults to
+.Ql MIT .
+
+.Ar license-url
+is a link to a page describing the license.
+It defaults to
+.Pa https://opensource.org/license/MIT .
+Be careful that you keep
+.Ar license-type
+and
+.Ar license-url
+consistent.
+You can't change either one after the file has been uploaded.
+
+.Ss setid
+The
+.Cm setid
+subcommand assigns a collection id to
+.Ar remote-path.
+This will fail if a collection id has already been assigned.
+
+.Ss getstate
+The
+.Cm getstate
+subcommand prints the state of
+.Ar remote-path
+to stdout as a json document.
+The output is unformatted, but you can run it through
+.Xr jq 1
+to get something like this:
+.Bd -literal -offset indent
+{
+  "path": "project/README.txt",
+  "is_publishable": false,
+  "collection_id": "abcde-12345",
+  "title": "README file",
+  "size_in_bytes": 53,
+  "type": "text/plain",
+  "licence": "MIT",
+  "licence_url": "https://opensource.org/licenses/MIT",
+  "state": "UPLOADED",
+  "etag": "2cacd3d4af3ec8aac13c1a54214b8c32"
+}
+.Ed
+
+.Ss publish
+The
+.Cm publish
+subcommand publishes all the files with the collection id
+.Ar collection-id.
+
+.Ss getpub
+The
+.Cm getpub
+subcommand retrieves
+.Ar remote-path
+from the Publish environment and prints it to stdout.
+
+.Ss getweb
+The
+.Cm getweb
+subcommand retrieves
+.Ar remote-path
+from the Web environment and prints it to stdout.
+If the file is very large, and the WriteTimeout on the Download Service is too low,
+and if the file has not been fully decrypted into S3 yet, you will get an unexpected EOF error.
+The solution is to set the WriteTimeout higher.
+The workaround is to wait a while until the file has been fully decrypted.
+
+(To set the WriteTimeout higher in the download service, you must set
+.Va s.Server.WriteTimeout
+in
+.Pa service/external/external.go
+in the
+.Pa dp-download-service
+repo to a value big enough to allow the whole transfer to finish.
+This can vary depending on the size of the file and the user's download bandwidth.)
+
+.Sh ENVIRONMENT
+
+Not all operations require credentials.
+For operations that do, the following environment variables are used:
+
+.Ev IDENTITY_TOKEN
+.br
+.Ev IDENTITY_EMAIL
+.br
+.Ev IDENTITY_PASSWORD
+
+If
+.Ev IDENTITY_TOKEN
+is set, it will be used directly.
+Otherwise,
+.Ev IDENTITY_EMAIL
+and
+.Ev IDENTITY_PASSWORD
+will be used to get an identity token from the
+.Va identity
+host in the config file.
+
+.Ev FLORENCE_TOKEN
+.br
+.Ev FLORENCE_EMAIL
+.br
+.Ev FLORENCE_PASSWORD
+
+If
+.Ev FLORENCE_TOKEN
+is set, it will be used directly.
+Otherwise,
+.Ev FLORENCE_EMAIL
+and
+.Ev FLORENCE_PASSWORD
+will be used to get a florence token from the
+.Va zebedee
+host in the config file.
+
+.Sh FILES
+config.yml
+
+.Sh EXIT STATUS
+filescli exits 0 on success, 2 on a usage error, and 1 on any other error.
+
+.Sh EXAMPLES
+Upload a file without setting a collection id:
+.Bd -literal -offset indent
+$ filescli upload -m text/plain -t 'README file' \\
+    README.txt project/README.txt
+.Ed
+
+Set the file's collection id:
+.Bd -literal -offset indent
+$ filescli setid -c abcde-12345 project/README.txt
+.Ed
+
+Get a file's status:
+.Bd -literal -offset indent
+$ filescli getstate project/README.txt | jq
+{
+  "path": "project/README.txt",
+  "is_publishable": false,
+  "collection_id": "abcde-12345",
+  "title": "README file",
+  "size_in_bytes": 53,
+  "type": "text/plain",
+  "licence": "MIT",
+  "licence_url": "https://opensource.org/licenses/MIT",
+  "state": "UPLOADED",
+  "etag": "2cacd3d4af3ec8aac13c1a54214b8c32"
+}
+.Ed
+
+Download a file from the Publish environment:
+.Bd -literal -offset indent
+$ filescli getpub project/README.txt
+This is the content of README.txt as downloaded.....
+.Ed
+
+Attempt to download an unpublished file from the Web enviroment:
+.Bd -literal -offset indent
+$ filescli getweb project/README.txt
+file not found on remote
+.Ed
+
+Publish to the Web environment:
+.Bd -literal -offset indent
+$ filescli publish -c abcde-12345
+.Ed
+
+Now the download from the Web environment will work:
+.Bd -literal -offset indent
+$ filescli getweb project/README.txt
+This is the content of README.txt as downloaded.....
+.Ed
+
+.Sh DIAGNOSTICS
+You may see these messages if the
+.Ev IDENTITY_*
+and
+.Ev FLORENCE_*
+environment variables are not set:
+.Bd -literal
+could not get authentication token: identity server, email and password required
+could not get login token: login server, email and password required
+.Ed
+
+These messages are not necessarily a problem if the operation doesn't require credentials.
+In that case, the messages are just warnings.
+
+If the operation requires credentials, these messages are saying there is not enough information
+provided to get the required tokens.
+You should set the appropriate environment variables.
+
+.Sh SEE ALSO
+.Pa https://github.com/ONSdigital/dp-static-files-compose

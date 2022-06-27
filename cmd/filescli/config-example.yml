@@ -1,0 +1,7 @@
+hosts:
+  zebedee: http://ons:8082
+  files: http://ons:26900
+  download-publishing: http://ons:23600
+  download-web: http://ons:23601
+  identity: http://ons:25600
+  upload: http://ons:25100
