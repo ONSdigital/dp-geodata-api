@@ -4,6 +4,6 @@
 
 for f in ChangeHistory.csv Equivalents.csv
 do
-    aws --profile development s3 cp s3://find-insights-input-data-files/geoname/$f .
+    aws --profile dp-sandbox s3 cp s3://ons-dp-sandbox-atlas-input/geoname/$f .
 done
 curl -o MSOA-Names-1.16.csv https://houseofcommonslibrary.github.io/msoanames/MSOA-Names-1.16.csv

@@ -23,7 +23,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// aws --region eu-central-1 s3 sync s3://find-insights-input-data-files/nomis/ .
+// aws --profile dp-sandbox s3 sync s3://ons-dp-sandbox-atlas-input/nomis/ .
 
 const dataPref = "dataingest/addtodb/data/"
 

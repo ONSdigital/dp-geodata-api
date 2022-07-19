@@ -26,7 +26,7 @@ https://geoportal.statistics.gov.uk/datasets/middle-layer-super-output-areas-dec
 
 Source of "Middle_Layer_Super_Output_Areas_(December_2011)_Boundaries_Super_Generalised_Clipped_(BSC)_EW_V3.geojson"
 
-Copies of files are in s3://find-insights-input-data-files/geojson (see other docs)
+Copies of files are in s3://ons-dp-sandbox-atlas-input/geojson (see other docs)
 
 NOTES
 

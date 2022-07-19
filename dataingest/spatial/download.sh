@@ -6,5 +6,5 @@ for f in \
     'Local_Authority_Districts_(December_2017)_Boundaries_in_the_UK_(WGS84).geojson' \
     'Output_Areas__December_2011__Boundaries_EW_BGC.geojson'
 do
-    aws --profile development s3 cp s3://find-insights-input-data-files/geojson/"$f" .
+    aws --profile dp-sandbox s3 cp s3://ons-dp-sandbox-atlas-input/geojson/"$f" .
 done

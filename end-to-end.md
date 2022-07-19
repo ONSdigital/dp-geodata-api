@@ -74,7 +74,7 @@ Environment variables are important! Always verify the `PG_*` and `POSTGRES_PASS
 ## Download source data files
 
     # test S3 access
-    aws --profile development s3 ls s3://find-insights-input-data-files
+    aws --profile dp-sandbox s3 ls s3://ons-dp-sandbox-atlas-input
 
     cd dataingest/addtodb
     ./download-data-2i.sh

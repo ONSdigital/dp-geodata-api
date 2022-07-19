@@ -4,7 +4,7 @@ CSV from
 
 https://geoportal.statistics.gov.uk/datasets/a8d42df48f374a52907fe7d4f804a662/about
 
-is also stored at `s3://find-insights-input-data-files/postcode/PCD_OA_LSOA_MSOA_LAD_MAY20_UK_LU.csv`
+is also stored at `s3://ons-dp-sandbox-atlas-input/postcode/PCD_OA_LSOA_MSOA_LAD_MAY20_UK_LU.csv`
 
 ```
 go run .

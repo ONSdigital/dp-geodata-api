@@ -259,7 +259,7 @@ This is a "quick" way to setup a local stack for front end development.
     A compressed database dump is held in S3.
     Download the gzip and uncompress.
 
-        aws --profile development --region eu-central-1 s3 cp s3://find-insights-db-dumps/census-20220118.sql.gz .
+        aws --profile dp-sandbox s3 cp s3://ons-dp-sandbox-atlas-db-dumps/census-20220118.sql.gz .
         gunzip census-20220118.sql.gz
 
     The file unzips to >500MB.
