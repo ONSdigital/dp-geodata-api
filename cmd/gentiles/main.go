@@ -18,7 +18,6 @@ import (
 	"github.com/ONSdigital/dp-geodata-api/pkg/geodata"
 	dplog "github.com/ONSdigital/log.go/v2/log"
 	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/twpayne/go-geom/encoding/geojson"
 )
 
 const (
@@ -316,21 +315,10 @@ func (g *generator) gengeos(ctx context.Context) error {
 			if err != nil {
 				log.Fatal(err)
 			}
-			//resp.GeoJSON.Features[1] = resp.GeoJSON.Features[2]
-			//resp.GeoJSON.Features = resp.GeoJSON.Features[0:2]
 
 			if resp.GeoJSON == nil {
 				return // some geographies do not have geometries
 			}
-
-			// squeeze out "boundary" feature
-			var features []*geojson.Feature
-			for _, feat := range resp.GeoJSON.Features {
-				if feat.ID == "centroid" || feat.ID == "bbox" {
-					features = append(features, feat)
-				}
-			}
-			resp.GeoJSON.Features = features
 
 			content, err := json.MarshalIndent(resp, "", "    ")
 			if err != nil {
