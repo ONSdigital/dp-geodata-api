@@ -1,0 +1,14 @@
+version: "3.0"
+
+services:
+  atlas:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    image: atlas-${ATLAS_USER}:latest
+    volumes:
+      - type: bind
+        source: /data
+        target: /data
+    command: /data/sshd.sh
+    init: true
