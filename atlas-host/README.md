@@ -171,6 +171,17 @@ If you need to add another shell user to the Atlas image:
 
 It's up to the new user to log in and set up their own environment.
 
+## Accessing github from the Atlas host or a container
+
+Outbound port 22 is blocked at the VPC level, so we need to access github on port 443.
+Add this tweak to your `~/.ssh/config` file in your container:
+
+	Host github.com
+		Hostname ssh.github.com
+		Port 443
+		User git
+
+See [Using SSH over the HTTPS port](https://docs.github.com/en/authentication/troubleshooting-ssh/using-ssh-over-the-https-port)
 
 ## Credits
 

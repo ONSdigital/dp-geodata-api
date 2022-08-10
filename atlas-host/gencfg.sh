@@ -41,6 +41,8 @@ Host container
     Hostname $ip
     StrictHostKeyChecking no
     UserKnownHostsFile /dev/null
+    # git needs ssh credentials
+    ForwardAgent yes
 EOF
 }
 

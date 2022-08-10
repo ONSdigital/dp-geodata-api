@@ -10,7 +10,7 @@
 
 ## Get Tile Bounding Boxes
 
-1. Get the current `data-tile-grids/quadsDataTileGrids.json` file from the `dp-census-atlas` repo.
+1. Get the current `data-tile-grids/quadsDataTileGrid.json` file from the `dp-census-atlas` repo.
 
 ## Generate Geocode Listing
 
@@ -28,7 +28,7 @@ _This takes a long time and can make your CPU very hot._
 
 2. Run
 
-        go run ./main.go -C categories.txt -T quadsDataTileGrids.json -G geos.txt -j 10 -o out 2>main.stderr
+        go run ./main.go -C categories.txt -T quadsDataTileGrid.json -G geos.txt -j 10 -o out 2>main.stderr
 
     The `-j` option is concurrency.
     Low concurrency takes a long time, but high concurrency runs very hot.

@@ -11,6 +11,10 @@ fi
 otime=$SECONDS
 set -e -x
 PGPASSWORD=$POSTGRES_PASSWORD dropdb --username postgres --if-exists "$PGDATABASE"
+# update-schema has a CREATE DATABASE, but it runs as the postgres user.
+# In RDS Aurora, the postgres user doesn't have permissions to do this.
+# So create the database here as the atlas user, and let update-schema print an error.
+psql --dbname postgres -c "CREATE DATABASE $PGDATABASE";
 yes | make update-schema
 go run ./dataingest/addtodb
 (yes | make update-schema) 

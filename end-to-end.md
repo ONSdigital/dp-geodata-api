@@ -4,13 +4,13 @@ This is a complete step-by-step guide to all the steps related to building a dat
 
 Some steps do not have to be done every single time, but are included here for completeness.
 
-Unless otherwise stated, `cd` commands are relative to a checked out `dp-find-insights-poc-api` repo.
+Unless otherwise stated, `cd` commands are relative to a checked out `dp-geodata-api` repo.
 
 Environment variables are important! Always verify the `PG_*` and `POSTGRES_PASSWORD` variables before a risky step.
 
 ## Prerequisites
 
-* [dp-find-insights-poc-api](https://github.com/ONSdigitsl/dp-find-insights-poc-api) and
+* [dp-geodata-api](https://github.com/ONSdigitsl/dp-geodata-api) and
   [dp-setup](https://github.com/ONSdigital/dp-setup) repos checked out
 
 * postgres cli tools installed
@@ -161,7 +161,7 @@ Verify your environment variables point to the tunnel and use the RDS credential
 
 Then run the import:
 
-    cd <dp-find-insights-poc-api repo>
+    cd <dp-geodata-api repo>
     cd dataingest/dbsetup
     
     # this is the sql dump file created in the Export Database step above
@@ -186,7 +186,7 @@ The only requirement is a running local API that talks to RDS.
 
 Just run this in another terminal.  You should not get any errors.
 
-    cd <dp-find-insights-poc-api repo>
+    cd <dp-geodata-api repo>
     make test-local
 
 ## Tear down RDS
