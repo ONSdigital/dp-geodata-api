@@ -40,7 +40,7 @@ func main() {
 		f.Close()
 
 		if len(table) < 2 {
-			log.Printf("%s: no data\n")
+			log.Printf("%s: no data\n", fname)
 			continue
 		}
 
