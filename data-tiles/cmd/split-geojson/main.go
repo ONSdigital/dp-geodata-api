@@ -77,7 +77,7 @@ func process(codeprop, enameprop, typeprop, dir string) error {
 		// calc centroid as a feature, id="centroid"
 		p, err := xy.Centroid(feat.Geometry)
 		if err != nil {
-			log.Printf("feature %d: cannot calculate centroid: %w", i, err)
+			log.Printf("feature %d: cannot calculate centroid: %s", i, err)
 			continue
 		}
 		centroid := geom.NewPoint(geom.XY)
@@ -91,7 +91,7 @@ func process(codeprop, enameprop, typeprop, dir string) error {
 			},
 		)
 		if err != nil {
-			log.Printf("feature %d: cannot calc linestring bbox: %w", i, err)
+			log.Printf("feature %d: cannot calc linestring bbox: %s", i, err)
 			continue
 		}
 
