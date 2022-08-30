@@ -86,7 +86,7 @@ MSOA_URL=https://houseofcommonslibrary.github.io/msoanames/$(MSOA_NAMES)
 #
 # Directory locations
 #
-D=data
+D?=data
 DD=$D/downloads
 DDG=$(DD)/geo
 DDM=$(DD)/metrics
@@ -163,7 +163,7 @@ ZIP_PATHS=$(foreach zip,$(NOMIS_ZIPS),$(DDM)/$(zip))
 GEOJSON_PATHS=$(foreach geojson,$(RAW_GEOJSON),$(DDG)/$(geojson))
 
 # path to local downloaded MSOA name file
-MSOA_NAME_PATH=data/downloads/geo/$(MSOA_NAMES)
+MSOA_NAME_PATH=$(DDG)/$(MSOA_NAMES)
 
 .PHONY: download
 download: $(ZIP_PATHS) $(GEOJSON_PATHS) $(MSOA_NAME_PATH)
@@ -214,7 +214,7 @@ STANDARD_OA=$(DPG)/oa.geojson
 standard: $(STANDARD_LAD) $(STANDARD_LSOA) $(STANDARD_MSOA) $(STANDARD_OA)
 
 $(STANDARD_LAD): $(DDG)/$(RAW_LAD) recode-lads.csv recode-lads normalise
-	./atomic.sh "$@" sh -o pipefail -c ' \
+	./atomic.sh "$@" bash -o pipefail -c ' \
 		./recode-lads -r recode-lads.csv < "$(DDG)/$(RAW_LAD)" | \
 		./normalise -t LAD -c lad17cd -e lad17nm -w lad17nmw \
 	'
@@ -222,7 +222,7 @@ clean::
 	rm -f "$(STANDARD_LAD)"
 
 $(STANDARD_LSOA): $(DDG)/$(RAW_LSOA) ./normalise
-	./atomic.sh "$@" sh -o pipefail -c ' \
+	./atomic.sh "$@" bash -o pipefail -c ' \
 		./normalise -t LSOA -c LSOA11CD -e LSOA11NM -w LSOA11NMW < "$(DDG)/$(RAW_LSOA)" \
 	'
 clean::
@@ -230,7 +230,7 @@ clean::
 
 
 $(STANDARD_MSOA): $(DDG)/$(RAW_MSOA) $(DDG)/$(MSOA_NAMES) rename-msoas normalise
-	./atomic.sh "$@" sh -o pipefail -c ' \
+	./atomic.sh "$@" bash -o pipefail -c ' \
 		./rename-msoas -n "$(DDG)/$(MSOA_NAMES)" < "$(DDG)/$(RAW_MSOA)" | \
 		./normalise -t MSOA -c MSOA11CD -e MSOA11NM -e MSOA11NMW \
 	'
@@ -238,7 +238,7 @@ clean::
 	rm -f "$(STANDARD_MSOA)"
 
 $(STANDARD_OA): $(DDG)/$(RAW_OA) normalise
-	./atomic.sh "$@" sh -o pipefail -c ' \
+	./atomic.sh "$@" bash -o pipefail -c ' \
 		./normalise -t OA -c OA11CD -e OA11CD -w OA11CD < "$(DDG)/$(RAW_OA)" \
 	'
 clean::
