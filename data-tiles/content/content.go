@@ -12,13 +12,13 @@ import (
 	"github.com/twpayne/go-geom"
 )
 
-// content describes the content.json file.
-// content.json holds quads, but the bbox is not in go-geom format.
+// content describes the DataTileGrid.json file.
+// DataTileGrid.json holds quads, but the bbox is not in go-geom format.
 type content map[types.Geotype][]cquad
 
-// cquad is a single quad in content.json format.
+// cquad is a single quad in DataTileGrid.json format.
 type cquad struct {
-	Tilename string `json:"tilename'`
+	Tilename string `json:"tilename"`
 	Bbox     struct {
 		South float64 `json:"south"`
 		East  float64 `json:"east"`
@@ -33,7 +33,7 @@ type Quad struct {
 	Bbox     *geom.Bounds
 }
 
-// Load loads content.json
+// Load loads DataTileGrid.json
 func Load(fname string) (map[types.Geotype][]Quad, error) {
 	log.Printf("Loading %s", fname)
 	f, err := os.Open(fname)

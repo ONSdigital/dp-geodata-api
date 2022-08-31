@@ -17,7 +17,7 @@ import (
 
 func main() {
 	catfile := flag.String("c", "categories.txt", "text file holding list of categories to use")
-	contentfile := flag.String("q", "content.json", "json tile description file")
+	contentfile := flag.String("q", "DataTileGrid.json", "json tile description file")
 	geodir := flag.String("G", "data/processed/geo", "directory holding geojson files for each geotype")
 	metdir := flag.String("M", "data/processed/metrics", "directory holding metrics files for each category")
 	outdir := flag.String("O", "data/output/breaks", "output directory")

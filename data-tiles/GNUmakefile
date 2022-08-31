@@ -19,8 +19,20 @@
 #
 #	clean -- remove generated files
 #	realclean -- remove generated and downloaded files
+#
+# Command line variable overrides
+#
+#	D -- name of data directory (default "data")
+#	DATA_TILE_GRID -- name of quads and layers file (default "DataTileGrid.json")
+#	CATEGORIES -- name of categories file (default "categories.txt"
 
 .DEFAULT_GOAL: all
+
+#
+# Config files
+#
+DATA_TILE_GRID?=DataTileGrid.json
+CATEGORIES?=categories.txt
 
 #
 # Files to download
@@ -186,8 +198,9 @@ EXTRACT_PATHS=$(patsubst %.zip,%.extracted,$(ZIP_PATHS))
 
 # how to extract a zip file
 $(EXTRACT_PATHS): %.extracted: %.zip
-	./atomic-rm.sh "$@"
-	unzip -d "$@" "$<"
+	./atomic-rm.sh "$@".tmp
+	unzip -d "$@".tmp "$<"
+	mv "$@".tmp "$@"
 
 .PHONY: extract
 extract: $(EXTRACT_PATHS)
@@ -305,16 +318,16 @@ $(DOT)/.done: \
 		$(STANDARD_MSOA) \
 		$(STANDARD_OA) \
 		$(DPM)/.done \
-		content.json \
-		categories.txt \
+		$(DATA_TILE_GRID) \
+		$(CATEGORIES) \
 		generate-tiles
 	./atomic-rm.sh "$(DOT_TMP)"
 	mkdir "$(DOT_TMP)"
 	./generate-tiles \
 		-G "$(DPG)" \
 		-M "$(DPM)" \
-		-c categories.txt \
-		-q content.json \
+		-c "$(CATEGORIES)" \
+		-q "$(DATA_TILE_GRID)" \
 		-O "$(DOT_TMP)"
 	touch "$(DOT_TMP)"/.done
 	./atomic-rm.sh "$(DOT)"
@@ -337,16 +350,16 @@ $(DOB)/.done: \
 		$(STANDARD_MSOA) \
 		$(STANDARD_OA) \
 		$(DPM)/.done \
-		content.json \
-		categories.txt \
+		$(DATA_TILE_GRID) \
+		$(CATEGORIES) \
 		generate-breaks
 	./atomic-rm.sh "$(DOB_TMP)"
 	mkdir "$(DOB_TMP)"
 	./generate-breaks \
 		-G "$(DPG)" \
 		-M "$(DPM)" \
-		-c categories.txt \
-		-q content.json \
+		-c "$(CATEGORIES)" \
+		-q "$(DATA_TILE_GRID)" \
 		-O "$(DOB_TMP)"
 	touch "$(DOB_TMP)"/.done
 	./atomic-rm.sh "$(DOB)"

@@ -47,7 +47,7 @@ Overall flow of the process:
 		Results are placed in data/output/geo.
 
 	Generate data tiles (make tiles)
-		content.json and categories are used to select data from the split
+		DataTileGrid.json and categories are used to select data from the split
 		metrics and normalised geojson files.
 		Results are placed in data/output/tiles.
 
@@ -66,7 +66,7 @@ Cleanup targets
 Configuration Files
 
 	categories.txt		-- list of categories to use in output files
-	content.json		-- list of quads for generating data tiles
+	DataTileGrid.json	-- list of quads for generating data tiles
 	recode-lads.csv		-- adjustments to LAD names
 
 Data directories
