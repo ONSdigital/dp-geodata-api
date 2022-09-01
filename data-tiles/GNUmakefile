@@ -24,15 +24,18 @@
 #
 #	D -- name of data directory (default "data")
 #	DATA_TILE_GRID -- name of quads and layers file (default "DataTileGrid.json")
-#	CATEGORIES -- name of categories file (default "categories.txt"
+#	CATEGORIES -- name of categories file (default "categories.txt")
+#	GEOVERSION -- geography version (default "2011")
 
-.DEFAULT_GOAL: all
+.DEFAULT_GOAL=all
 
 #
 # Config files
 #
 DATA_TILE_GRID?=DataTileGrid.json
 CATEGORIES?=categories.txt
+
+GEOVERSION?=2011
 
 #
 # Files to download
@@ -74,51 +77,31 @@ NOMIS_ZIPS=\
 	qs702ew_oa.zip \
 	qs803ew_2011_oa.zip \
 
-# S3 prefix for downloading raw geojson files (in dp-sandbox environment)
-S3_URL=s3://ons-dp-sandbox-atlas-input/geojson
-
-# Raw LAD geojson
-RAW_LAD=Local_Authority_Districts_(December_2017)_Boundaries_in_the_UK_(WGS84).geojson
-
-# Raw LSOA geojson
-RAW_LSOA=Lower_Layer_Super_Output_Areas_(December_2011)_Boundaries_Super_Generalised_Clipped_(BSC)_EW_V3.geojson
-
-# Raw MSOA geojson
-RAW_MSOA=Middle_Layer_Super_Output_Areas_(December_2011)_Boundaries_Super_Generalised_Clipped_(BSC)_EW_V3.geojson
-
-# Raw OA geojson
-RAW_OA=Output_Areas__December_2011__Boundaries_EW_BGC.geojson
-
-# Name of CSV holding MSOA names
-MSOA_NAMES=MSOA-Names-1.16.csv
-
-# URL to download MSOA names
-MSOA_URL=https://houseofcommonslibrary.github.io/msoanames/$(MSOA_NAMES)
-
 #
 # Directory locations
 #
 D?=data
 DD=$D/downloads
 DDG=$(DD)/geo
+DDGV=$(DDG)/$(GEOVERSION)
 DDM=$(DD)/metrics
 DP=$D/processed
 DPG=$(DP)/geo
+DPGV=$(DPG)/$(GEOVERSION)
 DPM=$(DP)/metrics
 DO=$D/output
 DOG=$(DO)/geo
+DOGV=$(DOG)/$(GEOVERSION)
 DOB=$(DO)/breaks
 DOT=$(DO)/tiles
 
-
-# All the raw geojson files to download
-RAW_GEOJSON=$(RAW_LAD) $(RAW_LSOA) $(RAW_MSOA) $(RAW_OA)
+include geo-$(GEOVERSION).mk
 
 #
 # do everything
 #
 .PHONY: all
-all: dirs $(DOG)/.done $(DOT)/.done $(DOB)/.done
+all: dirs $(DOGV)/.done $(DOT)/.done $(DOB)/.done
 
 #
 # cleanup
@@ -133,7 +116,7 @@ clean::
 #
 .PHONY: dirs
 dirs:
-	mkdir -p $(DDG) $(DDM) $(DPG) $(DPM) $(DOG) $(DOB) $(DOT)
+	mkdir -p $(DDGV) $(DDM) $(DPGV) $(DPM) $(DOGV) $(DOB) $(DOT)
 
 #
 # binaries
@@ -163,30 +146,13 @@ clean::
 %.zip:
 	./atomic.sh "$@" curl $(NOMIS_URL)/`basename "$@"`
 
-# How to download .geojson files
-%.geojson:
-	aws s3 cp $(S3_URL)/`basename "$@"` "$@".tmp
-	mv "$@".tmp "$@"
-
 # paths to local downloaded zip files
 ZIP_PATHS=$(foreach zip,$(NOMIS_ZIPS),$(DDM)/$(zip))
 
-# paths to local downloaded raw geojson files
-GEOJSON_PATHS=$(foreach geojson,$(RAW_GEOJSON),$(DDG)/$(geojson))
-
-# path to local downloaded MSOA name file
-MSOA_NAME_PATH=$(DDG)/$(MSOA_NAMES)
-
 .PHONY: download
-download: $(ZIP_PATHS) $(GEOJSON_PATHS) $(MSOA_NAME_PATH)
+download: $(ZIP_PATHS) $(GEO_DOWNLOADS)
 realclean::
-	rm -f $(foreach path,$(GEOJSON_PATHS),"$(path)")
 	rm -f $(foreach path,$(ZIP_PATHS),"$(path)")
-
-$(MSOA_NAME_PATH):
-	./atomic.sh "$(MSOA_NAME_PATH)" curl "$(MSOA_URL)"
-realclean::
-	rm -f "$(MSOA_NAME_PATH)"
 
 #
 # extract
@@ -210,52 +176,9 @@ clean::
 #
 # standard
 #
-# The files in $DPG are versions of the downloaded geojson, but with bboxes added
-# for each feature, and with geotype, geocode, ename and wname properties added.
-#
-# Also MSOA names are added, and certain LAD names are changed.
-
-STANDARD_LAD=$(DPG)/lad.geojson
-
-STANDARD_LSOA=$(DPG)/lsoa.geojson
-
-STANDARD_MSOA=$(DPG)/msoa.geojson
-
-STANDARD_OA=$(DPG)/oa.geojson
 
 .PHONY: standard
-standard: $(STANDARD_LAD) $(STANDARD_LSOA) $(STANDARD_MSOA) $(STANDARD_OA)
-
-$(STANDARD_LAD): $(DDG)/$(RAW_LAD) recode-lads.csv recode-lads normalise
-	./atomic.sh "$@" bash -o pipefail -c ' \
-		./recode-lads -r recode-lads.csv < "$(DDG)/$(RAW_LAD)" | \
-		./normalise -t LAD -c lad17cd -e lad17nm -w lad17nmw \
-	'
-clean::
-	rm -f "$(STANDARD_LAD)"
-
-$(STANDARD_LSOA): $(DDG)/$(RAW_LSOA) ./normalise
-	./atomic.sh "$@" bash -o pipefail -c ' \
-		./normalise -t LSOA -c LSOA11CD -e LSOA11NM -w LSOA11NMW < "$(DDG)/$(RAW_LSOA)" \
-	'
-clean::
-	rm -f "$(STANDARD_LSOA)"
-
-
-$(STANDARD_MSOA): $(DDG)/$(RAW_MSOA) $(DDG)/$(MSOA_NAMES) rename-msoas normalise
-	./atomic.sh "$@" bash -o pipefail -c ' \
-		./rename-msoas -n "$(DDG)/$(MSOA_NAMES)" < "$(DDG)/$(RAW_MSOA)" | \
-		./normalise -t MSOA -c MSOA11CD -e MSOA11NM -e MSOA11NMW \
-	'
-clean::
-	rm -f "$(STANDARD_MSOA)"
-
-$(STANDARD_OA): $(DDG)/$(RAW_OA) normalise
-	./atomic.sh "$@" bash -o pipefail -c ' \
-		./normalise -t OA -c OA11CD -e OA11CD -w OA11CD < "$(DDG)/$(RAW_OA)" \
-	'
-clean::
-	rm -f "$(STANDARD_OA)"
+standard: $(GEO_PROCESSED)
 
 #
 # geos
@@ -263,22 +186,23 @@ clean::
 # All the output geojson files end up in a a single directory, so it is all or nothing.
 
 .PHONY: geos
-geos: $(DOG)/.done
+geos: $(DOGV)/.done
 
-DOG_TMP=$(DOG).tmp
+DOGV_TMP=$(DOGV).tmp
 
-$(DOG)/.done: $(STANDARD_LAD) $(STANDARD_LSOA) $(STANDARD_MSOA) $(STANDARD_OA) split-geojson
-	./atomic-rm.sh "$(DOG_TMP)"
-	mkdir "$(DOG_TMP)"
-	./split-geojson -d "$(DOG_TMP)" < "$(STANDARD_LAD)"
-	./split-geojson -d "$(DOG_TMP)" < "$(STANDARD_LSOA)"
-	./split-geojson -d "$(DOG_TMP)" < "$(STANDARD_MSOA)"
-	./split-geojson -d "$(DOG_TMP)" < "$(STANDARD_OA)"
-	touch "$(DOG_TMP)"/.done
-	./atomic-rm.sh "$(DOG)"
-	mv "$(DOG_TMP)" "$(DOG)"
+$(DOGV)/.done: $(GEO_PROCESSED) split-geojson
+	./atomic-rm.sh "$(DOGV_TMP)"
+	mkdir "$(DOGV_TMP)"
+	for f in $(foreach processed,$(GEO_PROCESSED),"$(processed)") ;\
+	do \
+		echo "splitting $$f" ;\
+		./split-geojson -d "$(DOGV_TMP)" < "$$f" ;\
+	done
+	touch "$(DOGV_TMP)"/.done
+	./atomic-rm.sh "$(DOGV)"
+	mv "$(DOGV_TMP)" "$(DOGV)"
 clean::
-	./atomic-rm.sh "$(DOG_TMP)" "$(DOG)"
+	./atomic-rm.sh "$(DOGV_TMP)" "$(DOGV)/$(GEOVERSION)"
 
 #
 # metrics
@@ -313,10 +237,7 @@ tiles: $(DOT)/.done
 DOT_TMP=$(DOT).tmp
 
 $(DOT)/.done: \
-		$(STANDARD_LAD) \
-		$(STANDARD_LSOA) \
-		$(STANDARD_MSOA) \
-		$(STANDARD_OA) \
+		$(GEO_PROCESSED) \
 		$(DPM)/.done \
 		$(DATA_TILE_GRID) \
 		$(CATEGORIES) \
@@ -324,7 +245,7 @@ $(DOT)/.done: \
 	./atomic-rm.sh "$(DOT_TMP)"
 	mkdir "$(DOT_TMP)"
 	./generate-tiles \
-		-G "$(DPG)" \
+		-G "$(DPGV)" \
 		-M "$(DPM)" \
 		-c "$(CATEGORIES)" \
 		-q "$(DATA_TILE_GRID)" \
@@ -345,10 +266,7 @@ breaks: $(DOB)/.done
 DOB_TMP=$(DOB).tmp
 
 $(DOB)/.done: \
-		$(STANDARD_LAD) \
-		$(STANDARD_LSOA) \
-		$(STANDARD_MSOA) \
-		$(STANDARD_OA) \
+		$(GEO_PROCESSED) \
 		$(DPM)/.done \
 		$(DATA_TILE_GRID) \
 		$(CATEGORIES) \
@@ -356,7 +274,7 @@ $(DOB)/.done: \
 	./atomic-rm.sh "$(DOB_TMP)"
 	mkdir "$(DOB_TMP)"
 	./generate-breaks \
-		-G "$(DPG)" \
+		-G "$(DPGV)" \
 		-M "$(DPM)" \
 		-c "$(CATEGORIES)" \
 		-q "$(DATA_TILE_GRID)" \
