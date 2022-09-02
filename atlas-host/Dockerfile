@@ -105,3 +105,9 @@ RUN ln -s /data/dl /home/dl && \
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y sudo && \
     echo "%atlas ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/atlas
+
+#
+# Install sshd.sh as the container init script
+#
+COPY sshd.sh /usr/local/etc/sshd.sh
+RUN chmod 0755 /usr/local/etc/sshd.sh

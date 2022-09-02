@@ -7,8 +7,14 @@ services:
       context: .
     image: atlas-${ATLAS_USER}:latest
     volumes:
+      - type: volume
+        source: local
+        target: /local
       - type: bind
         source: /data
         target: /data
-    command: /data/sshd.sh
+    command: [ "sh", "-c", "/bin/chown ${ATLAS_USER}:${ATLAS_USER} /local; /usr/local/etc/sshd.sh" ]
     init: true
+
+volumes:
+  local:
