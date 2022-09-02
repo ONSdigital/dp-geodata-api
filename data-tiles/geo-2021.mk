@@ -16,8 +16,6 @@
 
 LAD_URL=https://opendata.arcgis.com/api/v3/datasets/d31f826e318d441390f54f472d976ee1_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
 
-LSOA_URL=https://opendata.arcgis.com/api/v3/datasets/8fb6ac064a704cee9a999ee08414d61e_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
-
 MSOA_URL=https://opendata.arcgis.com/api/v3/datasets/ec053fbfee484bdcacc3ff8f328f605e_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
 
 OA_URL=https://opendata.arcgis.com/api/v3/datasets/5670c14a21224d8187357a095121ca39_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
@@ -27,7 +25,6 @@ OA_URL=https://opendata.arcgis.com/api/v3/datasets/5670c14a21224d8187357a095121c
 #
 
 RAW_LAD=$(DDGV)/lad.geojson
-RAW_LSOA=$(DDGV)/lsoa.geojson
 RAW_MSOA=$(DDGV)/msoa.geojson
 RAW_OA=$(DDGV)/oa.geojson
 
@@ -41,13 +38,6 @@ clean::
 	rm -f "$(RAW_LAD).new"
 realclean::
 	rm -f "$(RAW_LAD)"
-
-$(RAW_LSOA):
-	./atomic.sh "$@" curl "$(LSOA_URL)"
-clean::
-	rm -f "$(RAW_LSOA).new"
-realclean::
-	rm -f "$(RAW_LSOA)"
 
 $(RAW_MSOA):
 	./atomic.sh "$@" curl "$(MSOA_URL)"
@@ -85,7 +75,7 @@ realclean::
 #
 
 # paths to local downloaded raw geojson files and MSOA names file
-GEO_DOWNLOADS=$(RAW_LAD) $(RAW_LSOA) $(RAW_MSOA) $(RAW_OA) $(MSOA_NAMES)
+GEO_DOWNLOADS=$(RAW_LAD) $(RAW_MSOA) $(RAW_OA) $(MSOA_NAMES)
 
 
 #
@@ -99,8 +89,6 @@ GEO_DOWNLOADS=$(RAW_LAD) $(RAW_LSOA) $(RAW_MSOA) $(RAW_OA) $(MSOA_NAMES)
 
 STANDARD_LAD=$(DPGV)/lad.geojson
 
-STANDARD_LSOA=$(DPGV)/lsoa.geojson
-
 STANDARD_MSOA=$(DPGV)/msoa.geojson
 
 STANDARD_OA=$(DPGV)/oa.geojson
@@ -108,7 +96,7 @@ STANDARD_OA=$(DPGV)/oa.geojson
 #
 # Set GEO_PROCESSED so parent make file can use processed files as targets.
 #
-GEO_PROCESSED=$(STANDARD_LAD) $(STANDARD_LSOA) $(STANDARD_MSOA) $(STANDARD_OA)
+GEO_PROCESSED=$(STANDARD_LAD) $(STANDARD_MSOA) $(STANDARD_OA)
 
 #
 # Rules to process geo files
@@ -118,12 +106,6 @@ $(STANDARD_LAD): $(RAW_LAD) normalise
 	./atomic.sh "$@" ./normalise -t LAD -c LAD21CD -e LAD21NM -w LAD21NMW < "$(RAW_LAD)"
 clean::
 	rm -f "$(STANDARD_LAD).new" "$(STANDARD_LAD)"
-
-$(STANDARD_LSOA): $(RAW_LSOA) normalise
-	./atomic.sh "$@" ./normalise -t LSOA -c LSOA21CD -e LSOA21NM -w LSOA21NM < "$(RAW_LSOA)"
-clean::
-	rm -f "$(STANDARD_LSOA).new" "$(STANDARD_LSOA)"
-
 
 $(STANDARD_MSOA): $(RAW_MSOA) $(MSOA_NAMES) rename-msoas normalise
 	./atomic.sh "$@" bash -o pipefail -c ' \

@@ -202,7 +202,7 @@ $(DOGV)/.done: $(GEO_PROCESSED) split-geojson
 	./atomic-rm.sh "$(DOGV)"
 	mv "$(DOGV_TMP)" "$(DOGV)"
 clean::
-	./atomic-rm.sh "$(DOGV_TMP)" "$(DOGV)/$(GEOVERSION)"
+	./atomic-rm.sh "$(DOGV_TMP)" "$(DOGV)"
 
 #
 # metrics
