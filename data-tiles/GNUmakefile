@@ -124,6 +124,7 @@ dirs:
 BINARIES=\
 	generate-breaks \
 	generate-tiles \
+	map-categories \
 	normalise \
 	recode-lads \
 	rename-msoas \
