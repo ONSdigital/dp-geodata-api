@@ -128,7 +128,8 @@ BINARIES=\
 	recode-lads \
 	rename-msoas \
 	split-geojson \
-	split-metrics
+	split-metrics \
+	xls2csv
 
 .PHONY: binaries
 binaries: $(BINARIES)
