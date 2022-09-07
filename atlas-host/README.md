@@ -143,6 +143,15 @@ Stop your container like this:
 	make down
 
 
+## local Volume
+
+Since EFS is relatively slow, containers also have a `/local` volume that uses space
+on the docker EBS volume (under `/var/lib/docker` on the atlas host itself).
+
+You can point the data-tiles scripts to `/local` by using the `D` command line variable:
+
+	make GEOVERSION=2021 D=/local
+
 ## scp and sftp
 
 You can transfer files to and from your container with `scp` and `sftp`.
