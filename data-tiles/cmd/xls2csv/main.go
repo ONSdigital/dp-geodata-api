@@ -2,86 +2,93 @@ package main
 
 import (
 	"encoding/csv"
+	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"os"
 
-	"github.com/tealeg/xlsx"
+	"github.com/xuri/excelize/v2"
 )
 
 func main() {
-	list := flag.Bool("l", false, "list sheets in xlsx")
+	listflag := flag.Bool("l", false, "list sheets in xlsx")
 	sheetname := flag.String("s", "", "name of sheet to extract")
 	flag.Parse()
 
-	xls, err := loadXLS(os.Stdin)
+	xls, err := excelize.OpenReader(os.Stdin)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if *list {
-		for _, sheet := range xls.Sheets {
-			fmt.Printf("%s\n", sheet.Name)
-		}
+	if *listflag {
+		err = list(xls)
+	} else {
+		err = extract(xls, *sheetname)
+	}
+
+	if err != nil {
+		log.Println(err)
+	}
+	cerr := xls.Close()
+	if cerr != nil {
+		log.Println(err)
+	}
+
+	if err != nil || cerr != nil {
 		os.Exit(1)
 	}
-
-	if len(xls.Sheets) == 0 {
-		// not sure if this can happen, but just in case
-		log.Fatal("spreadsheet has no sheets")
-	}
-
-	var sheet *xlsx.Sheet
-	if *sheetname != "" {
-		var found bool
-		sheet, found = xls.Sheet[*sheetname]
-		if !found {
-			log.Fatal("sheet %s not found", *sheetname)
-		}
-	} else if len(xls.Sheets) > 1 {
-		log.Fatal("must provide sheetname when spreadsheet has multiple sheets")
-	} else {
-		sheet = xls.Sheets[0]
-	}
-
-	if err := extract(sheet, os.Stdout); err != nil {
-		log.Fatal(err)
-	}
 }
 
-func loadXLS(r io.Reader) (*xlsx.File, error) {
-	buf, err := io.ReadAll(r)
+func list(xls *excelize.File) error {
+	aidx := xls.GetActiveSheetIndex()
+	asheet := xls.GetSheetName(aidx)
+
+	for _, name := range xls.GetSheetList() {
+		var active string
+		if name == asheet {
+			active = " (active)"
+		}
+		fmt.Printf("%s%s\n", name, active)
+	}
+	return nil
+}
+
+func extract(xls *excelize.File, sheet string) error {
+	if sheet == "" {
+		aidx := xls.GetActiveSheetIndex()
+		sheet = xls.GetSheetName(aidx)
+		if sheet == "" {
+			return errors.New("no active sheet, try -s")
+		}
+	}
+
+	rows, err := xls.GetRows(sheet)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return xlsx.OpenBinary(buf)
-}
-
-func extract(sheet *xlsx.Sheet, w io.Writer) error {
-	writer := csv.NewWriter(w)
-
-	for _, row := range sheet.Rows {
-		var record []string
-		for _, cell := range row.Cells {
-			var value string
-			if cell == nil { // not sure if this happens
-				value = ""
-			} else {
-				value = cell.String()
-			}
-			record = append(record, value)
-		}
-		for len(record) < sheet.MaxCol {
-			record = append(record, "")
-		}
-		if err := writer.Write(record); err != nil {
-			return err
+	// count columns
+	var cols int
+	for _, row := range rows {
+		if len(row) > cols {
+			cols = len(row)
 		}
 	}
 
-	writer.Flush()
-	return writer.Error()
+	// extend short rows
+	for i, row := range rows {
+		for len(row) < cols {
+			row = append(row, "")
+		}
+		rows[i] = row
+	}
+
+	// emit csv
+	csvw := csv.NewWriter(os.Stdout)
+	if err := csvw.WriteAll(rows); err != nil {
+		return err
+	}
+	csvw.Flush()
+	return csvw.Error()
 }
