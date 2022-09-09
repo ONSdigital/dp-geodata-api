@@ -14,7 +14,6 @@ import (
 )
 
 func main() {
-	// load content.json and get categories
 	cfile := flag.String("c", "cmd/fake-data/testdata/small-content.json", "path to content.json")
 	geodir := flag.String("G", "cmd/fake-data/testdata", "directory holding geojson files ")
 	seed := flag.Int64("r", 0, "random number seed")
