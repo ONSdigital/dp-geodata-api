@@ -122,6 +122,7 @@ dirs:
 # binaries
 #
 BINARIES=\
+	fake-data \
 	generate-breaks \
 	generate-tiles \
 	map-categories \
