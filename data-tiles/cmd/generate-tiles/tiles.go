@@ -10,7 +10,7 @@ import (
 	"strconv"
 
 	"github.com/ONSdigital/dp-geodata-api/data-tiles/cat"
-	"github.com/ONSdigital/dp-geodata-api/data-tiles/content"
+	"github.com/ONSdigital/dp-geodata-api/data-tiles/grid"
 	"github.com/ONSdigital/dp-geodata-api/data-tiles/types"
 
 	"github.com/twpayne/go-geom"
@@ -18,12 +18,12 @@ import (
 
 func generateTiles(
 	cats []types.Category,
-	quadset map[types.Geotype][]content.Quad,
+	quadset map[types.Geotype][]grid.Quad,
 	bounds map[types.Geotype]map[types.Geocode]*geom.Bounds,
 	metrics map[types.Category]map[types.Geocode]types.Value,
 	dir string,
 ) error {
-	// for every geotype in contents.json
+	// for every geotype in DataTilesGrid.json
 	for geotype, quadlist := range quadset {
 		fmt.Printf("Generating tiles for %s\n", geotype)
 

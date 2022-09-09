@@ -1,4 +1,4 @@
-package content
+package grid
 
 import (
 	"encoding/json"
@@ -12,9 +12,9 @@ import (
 	"github.com/twpayne/go-geom"
 )
 
-// content describes the DataTileGrid.json file.
+// grid describes the DataTileGrid.json file.
 // DataTileGrid.json holds quads, but the bbox is not in go-geom format.
-type content map[types.Geotype][]cquad
+type grid map[types.Geotype][]cquad
 
 // cquad is a single quad in DataTileGrid.json format.
 type cquad struct {
@@ -43,13 +43,13 @@ func Load(fname string) (map[types.Geotype][]Quad, error) {
 	defer f.Close()
 
 	dec := json.NewDecoder(f)
-	var content content
-	if err := dec.Decode(&content); err != nil {
+	var grid grid
+	if err := dec.Decode(&grid); err != nil {
 		return nil, err
 	}
 
 	quads := make(map[types.Geotype][]Quad)
-	for geotype, cquads := range content {
+	for geotype, cquads := range grid {
 		for _, cq := range cquads {
 			var west, south, east, north float64
 			s := fmt.Sprintf(
