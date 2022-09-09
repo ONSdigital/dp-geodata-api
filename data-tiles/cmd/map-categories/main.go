@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ONSdigital/dp-geodata-api/data-tiles/cmd/map-categories/content"
+	"github.com/ONSdigital/dp-geodata-api/data-tiles/content"
 )
 
 func main() {
