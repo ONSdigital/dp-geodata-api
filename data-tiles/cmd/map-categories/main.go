@@ -16,7 +16,7 @@ func main() {
 	cfile := flag.String("c", "content.json", "path to content.json")
 	flag.Parse()
 
-	c, err := loadContent(*cfile)
+	c, err := content.LoadName(*cfile)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,17 +48,6 @@ func main() {
 	if err := cwriter.Error(); err != nil {
 		log.Fatal(err)
 	}
-}
-
-// loadContent loads content.json.
-func loadContent(name string) (*content.Content, error) {
-	f, err := os.Open(name)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	return content.Load(f)
 }
 
 // loadSpreadsheet loads the metrics CSV.

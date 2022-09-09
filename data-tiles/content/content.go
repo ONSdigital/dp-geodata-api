@@ -4,6 +4,7 @@ package content
 import (
 	"encoding/json"
 	"io"
+	"os"
 )
 
 type Content struct {
@@ -70,6 +71,16 @@ func Load(r io.Reader) (*Content, error) {
 		return nil, err
 	}
 	return &c, nil
+}
+
+func LoadName(name string) (*Content, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	return Load(f)
 }
 
 func (c *Content) Save(w io.Writer) error {
