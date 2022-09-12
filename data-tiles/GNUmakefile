@@ -9,11 +9,15 @@
 #	binaries -- compile Go programs (you may need -B)
 #
 #	download -- download geojson and metrics files
-#	extract -- extract CSVs from metrics zip files
-#	standard -- normalise downloaded geojson (add bbox, set geotype, etc)
+#	download-met -- download just metrics
+#	download-geo -- download just geojson files
+#
+#	process-geo -- normalise downloaded geojson (add bbox, set geotype, etc)
+#	process-met -- process metrics files to standard CSVs
+#
+#	metrics -- split metrics CSVs into single-metric files
 #
 #	geos -- generate geojson files for every geography in standard geojson
-#	metrics -- split downloaded CSVs into single-metric files
 #	tiles - generate data tile CSVs
 #	breaks -- generate break
 #
@@ -26,6 +30,7 @@
 #	DATA_TILE_GRID -- name of quads and layers file (default "DataTileGrid.json")
 #	CATEGORIES -- name of categories file (default "categories.txt")
 #	GEOVERSION -- geography version (default "2011")
+#	METVERSION -- metrics version (default "2011")
 
 .DEFAULT_GOAL=all
 
@@ -36,46 +41,7 @@ DATA_TILE_GRID?=DataTileGrid.json
 CATEGORIES?=categories.txt
 
 GEOVERSION?=2011
-
-#
-# Files to download
-#
-
-# Location of nomis zips
-NOMIS_URL=https://www.nomisweb.co.uk/output/census/2011
-
-# List of nomis zips to download, taken from Viv's v4 google spreadsheet.
-NOMIS_ZIPS=\
-	ks103ew_2011_oa.zip \
-	ks202ew_2011_oa.zip \
-	ks206ew_2011_oa.zip \
-	ks207wa_2011_oa.zip \
-	ks608ew_2011_oa.zip \
-	qs101ew_2011_oa.zip \
-	qs103ew_2011_oa.zip \
-	qs104ew_2011_oa.zip \
-	qs113ew_2011_oa.zip \
-	qs119ew_2011_oa.zip \
-	qs201ew_2011_oa.zip \
-	qs202ew_2011_oa.zip \
-	qs203ew_2011_oa.zip \
-	qs208ew_2011_oa.zip \
-	qs301ew_2011_oa.zip \
-	qs302ew_2011_oa.zip \
-	qs303ew_2011_oa.zip \
-	qs402ew_2011_oa.zip \
-	qs403ew_2011_oa.zip \
-	qs406ew_2011_oa.zip \
-	qs411ew_2011_oa.zip \
-	qs415ew_2011_oa.zip \
-	qs416ew_2011_oa.zip \
-	qs501ew_2011_oa.zip \
-	qs601ew_2011_oa.zip \
-	qs604ew_2011_oa.zip \
-	qs605ew_2011_oa.zip \
-	qs701ew_2011_oa.zip \
-	qs702ew_oa.zip \
-	qs803ew_2011_oa.zip \
+METVERSION?=2011
 
 #
 # Directory locations
@@ -85,10 +51,12 @@ DD=$D/downloads
 DDG=$(DD)/geo
 DDGV=$(DDG)/$(GEOVERSION)
 DDM=$(DD)/metrics
+DDMV=$(DDM)/$(METVERSION)
 DP=$D/processed
 DPG=$(DP)/geo
 DPGV=$(DPG)/$(GEOVERSION)
 DPM=$(DP)/metrics
+DPMV=$(DPM)/$(METVERSION)
 DO=$D/output
 DOG=$(DO)/geo
 DOGV=$(DOG)/$(GEOVERSION)
@@ -96,6 +64,7 @@ DOB=$(DO)/breaks
 DOT=$(DO)/tiles
 
 include geo-$(GEOVERSION).mk
+include met-$(METVERSION).mk
 
 #
 # do everything
@@ -116,7 +85,7 @@ clean::
 #
 .PHONY: dirs
 dirs:
-	mkdir -p $(DDGV) $(DDM) $(DPGV) $(DPM) $(DOGV) $(DOB) $(DOT)
+	mkdir -p $(DDGV) $(DDMV) $(DPGV) $(DPMV) $(DOGV) $(DOB) $(DOT)
 
 #
 # binaries
@@ -143,46 +112,22 @@ clean::
 	rm -f $(BINARIES)
 
 #
-# download
+# download targets
 #
 
-# How to download .zip files
-%.zip:
-	./atomic.sh "$@" curl $(NOMIS_URL)/`basename "$@"`
-
-# paths to local downloaded zip files
-ZIP_PATHS=$(foreach zip,$(NOMIS_ZIPS),$(DDM)/$(zip))
-
-.PHONY: download
-download: $(ZIP_PATHS) $(GEO_DOWNLOADS)
-realclean::
-	rm -f $(foreach path,$(ZIP_PATHS),"$(path)")
+.PHONY: download-met download-geo download
+download-geo: $(GEO_DOWNLOADS)
+download-met: $(MET_DOWNLOADS)
+download: $(GEO_DOWNLOADS) $(MET_DOWNLOADS)
 
 #
-# extract
+# processing and normalising
 #
 
-# Paths to extract directories.
-# Zip files are extracted into a directory with an .extracted suffix.
-EXTRACT_PATHS=$(patsubst %.zip,%.extracted,$(ZIP_PATHS))
-
-# how to extract a zip file
-$(EXTRACT_PATHS): %.extracted: %.zip
-	./atomic-rm.sh "$@".tmp
-	unzip -d "$@".tmp "$<"
-	mv "$@".tmp "$@"
-
-.PHONY: extract
-extract: $(EXTRACT_PATHS)
-clean::
-	./atomic-rm.sh $(foreach path,$(EXTRACT_PATHS),"$(path)")
-
-#
-# standard
-#
-
-.PHONY: standard
-standard: $(GEO_PROCESSED)
+.PHONY: process-geo process-met process
+process-geo: $(GEO_PROCESSED)
+process-met: $(MET_PROCESSED)
+process: $(GEO_PROCESSED) $(MET_PROCESSED)
 
 #
 # geos
@@ -213,23 +158,22 @@ clean::
 #
 # All the single-metric files end up in the same directory, so it is all or nothing.
 
-.PHONY: metrics
-metrics: $(DPM)/.done
+.PHONY: split-metrics
+split-metrics: $(DPMV)/.done
 
-DPM_TMP=$(DPM).tmp
+DPMV_TMP=$(DPMV).tmp
 
-# The single-metric files really depend on all *DATA.CSV files found under $DDM.
-# But $(EXTRACT_PATHS) work better because previous rules operate on these directories
-# and not on the CSV files.
-$(DPM)/.done: $(EXTRACT_PATHS) split-metrics
-	./atomic-rm.sh "$(DPM_TMP)"
-	mkdir "$(DPM_TMP)"
-	./split-metrics -s "$(DDM)" -d "$(DPM_TMP)"
-	touch "$(DPM_TMP)"/.done
-	./atomic-rm.sh "$(DPM)"
-	mv "$(DPM_TMP)" "$(DPM)"
+# XXX may need to change split-metrics to take list of directories and/or different
+# XXX glob name other than *DATA.CSV
+$(DPMV)/.done: $(MET_PROCESSED) split-metrics
+	./atomic-rm.sh "$(DPMV_TMP)"
+	mkdir "$(DPMV_TMP)"
+	./split-metrics -s "$(DDMV)" -d "$(DPMV_TMP)"
+	touch "$(DPMV_TMP)"/.done
+	./atomic-rm.sh "$(DPMV)"
+	mv "$(DPMV_TMP)" "$(DPMV)"
 clean::
-	./atomic-rm.sh "$(DPM_TMP)" "$(DPM)"
+	./atomic-rm.sh "$(DPMV_TMP)" "$(DPMV)"
 
 #
 # tiles
