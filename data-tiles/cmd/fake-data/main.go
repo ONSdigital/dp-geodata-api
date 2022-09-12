@@ -25,7 +25,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	cats := getCats(c)
+	cats := c.Categories()
 	log.Printf("\tfound %d categories\n", len(cats))
 
 	geos, err := loadGeos(*geodir)
@@ -37,22 +37,6 @@ func main() {
 	if err := genFake(cats, geos, *seed); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func getCats(c *content.Content) []string {
-	var cats []string
-	for _, group := range c.TopicGroups {
-		for _, topic := range group.Topics {
-			for _, variable := range topic.Variables {
-				for _, classification := range variable.Classifications {
-					for _, cat := range classification.Categories {
-						cats = append(cats, cat.Code)
-					}
-				}
-			}
-		}
-	}
-	return cats
 }
 
 func loadGeos(dir string) ([]string, error) {

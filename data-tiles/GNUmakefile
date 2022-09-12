@@ -122,6 +122,7 @@ dirs:
 # binaries
 #
 BINARIES=\
+	extract-categories \
 	fake-data \
 	generate-breaks \
 	generate-tiles \

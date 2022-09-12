@@ -88,3 +88,19 @@ func (c *Content) Save(w io.Writer) error {
 	enc.SetIndent("", "    ")
 	return enc.Encode(c)
 }
+
+func (c *Content) Categories() []string {
+	var cats []string
+	for _, group := range c.TopicGroups {
+		for _, topic := range group.Topics {
+			for _, variable := range topic.Variables {
+				for _, classification := range variable.Classifications {
+					for _, cat := range classification.Categories {
+						cats = append(cats, cat.Code)
+					}
+				}
+			}
+		}
+	}
+	return cats
+}
