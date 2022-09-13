@@ -12,10 +12,11 @@
 #	download-met -- download just metrics
 #	download-geo -- download just geojson files
 #
-#	process-geo -- normalise downloaded geojson (add bbox, set geotype, etc)
-#	process-met -- process metrics files to standard CSVs
+#	standard -- normalise downloaded geojson and metrics files
+#	standard-geo -- normalise just downloaded geojson (add bbox, set geotype, etc)
+#	standard-met -- normalise just downloaded metrics files to standard CSVs
 #
-#	metrics -- split metrics CSVs into single-metric files
+#	single-metrics -- split standard metrics CSVs into single-metric files
 #
 #	geos -- generate geojson files for every geography in standard geojson
 #	tiles - generate data tile CSVs
@@ -47,19 +48,21 @@ METVERSION?=2011
 # Directory locations
 #
 D?=data
+
 DD=$D/downloads
 DDG=$(DD)/geo
 DDGV=$(DDG)/$(GEOVERSION)
 DDM=$(DD)/metrics
 DDMV=$(DDM)/$(METVERSION)
+
 DP=$D/processed
 DPG=$(DP)/geo
 DPGV=$(DPG)/$(GEOVERSION)
 DPM=$(DP)/metrics
 DPMV=$(DPM)/$(METVERSION)
-DO=$D/output
+
+DO=$D/output/geo-$(GEOVERSION)+met-$(METVERSION)
 DOG=$(DO)/geo
-DOGV=$(DOG)/$(GEOVERSION)
 DOB=$(DO)/breaks
 DOT=$(DO)/tiles
 
@@ -70,7 +73,7 @@ include met-$(METVERSION).mk
 # do everything
 #
 .PHONY: all
-all: dirs $(DOGV)/.done $(DOT)/.done $(DOB)/.done
+all: dirs $(DOG)/.done $(DOT)/.done $(DOB)/.done
 
 #
 # cleanup
@@ -85,7 +88,7 @@ clean::
 #
 .PHONY: dirs
 dirs:
-	mkdir -p $(DDGV) $(DDMV) $(DPGV) $(DPMV) $(DOGV) $(DOB) $(DOT)
+	mkdir -p $(DDGV) $(DDMV) $(DPGV) $(DPMV) $(DOG) $(DOB) $(DOT)
 
 #
 # binaries
@@ -124,10 +127,10 @@ download: $(GEO_DOWNLOADS) $(MET_DOWNLOADS)
 # processing and normalising
 #
 
-.PHONY: process-geo process-met process
-process-geo: $(GEO_PROCESSED)
-process-met: $(MET_PROCESSED)
-process: $(GEO_PROCESSED) $(MET_PROCESSED)
+.PHONY: standard-geo standard-met standard
+standard-geo: $(GEO_STANDARD)
+standard-met: $(MET_STANDARD)
+standard: $(GEO_STANDARD) $(MET_STANDARD)
 
 #
 # geos
@@ -135,37 +138,37 @@ process: $(GEO_PROCESSED) $(MET_PROCESSED)
 # All the output geojson files end up in a a single directory, so it is all or nothing.
 
 .PHONY: geos
-geos: $(DOGV)/.done
+geos: $(DOG)/.done
 
-DOGV_TMP=$(DOGV).tmp
+DOG_TMP=$(DOG).tmp
 
-$(DOGV)/.done: $(GEO_PROCESSED) split-geojson
-	./atomic-rm.sh "$(DOGV_TMP)"
-	mkdir "$(DOGV_TMP)"
-	for f in $(foreach processed,$(GEO_PROCESSED),"$(processed)") ;\
+$(DOG)/.done: $(GEO_STANDARD) split-geojson
+	./atomic-rm.sh "$(DOG_TMP)"
+	mkdir "$(DOG_TMP)"
+	for f in $(foreach processed,$(GEO_STANDARD),"$(processed)") ;\
 	do \
 		echo "splitting $$f" ;\
-		./split-geojson -d "$(DOGV_TMP)" < "$$f" ;\
+		./split-geojson -d "$(DOG_TMP)" < "$$f" ;\
 	done
-	touch "$(DOGV_TMP)"/.done
-	./atomic-rm.sh "$(DOGV)"
-	mv "$(DOGV_TMP)" "$(DOGV)"
+	touch "$(DOG_TMP)"/.done
+	./atomic-rm.sh "$(DOG)"
+	mv "$(DOG_TMP)" "$(DOG)"
 clean::
-	./atomic-rm.sh "$(DOGV_TMP)" "$(DOGV)"
+	./atomic-rm.sh "$(DOG_TMP)" "$(DOG)"
 
 #
 # metrics
 #
 # All the single-metric files end up in the same directory, so it is all or nothing.
 
-.PHONY: split-metrics
-split-metrics: $(DPMV)/.done
+.PHONY: single-metrics
+single-metrics: $(DPMV)/.done
 
 DPMV_TMP=$(DPMV).tmp
 
 # XXX may need to change split-metrics to take list of directories and/or different
 # XXX glob name other than *DATA.CSV
-$(DPMV)/.done: $(MET_PROCESSED) split-metrics
+$(DPMV)/.done: $(MET_STANDARD) split-metrics
 	./atomic-rm.sh "$(DPMV_TMP)"
 	mkdir "$(DPMV_TMP)"
 	./split-metrics -s "$(DDMV)" -d "$(DPMV_TMP)"
@@ -185,8 +188,8 @@ tiles: $(DOT)/.done
 DOT_TMP=$(DOT).tmp
 
 $(DOT)/.done: \
-		$(GEO_PROCESSED) \
-		$(DPM)/.done \
+		$(GEO_STANDARD) \
+		$(DPMV)/.done \
 		$(DATA_TILE_GRID) \
 		$(CATEGORIES) \
 		generate-tiles
@@ -194,7 +197,7 @@ $(DOT)/.done: \
 	mkdir "$(DOT_TMP)"
 	./generate-tiles \
 		-G "$(DPGV)" \
-		-M "$(DPM)" \
+		-M "$(DPMV)" \
 		-c "$(CATEGORIES)" \
 		-q "$(DATA_TILE_GRID)" \
 		-O "$(DOT_TMP)"
@@ -214,8 +217,8 @@ breaks: $(DOB)/.done
 DOB_TMP=$(DOB).tmp
 
 $(DOB)/.done: \
-		$(GEO_PROCESSED) \
-		$(DPM)/.done \
+		$(GEO_STANDARD) \
+		$(DPMV)/.done \
 		$(DATA_TILE_GRID) \
 		$(CATEGORIES) \
 		generate-breaks
@@ -223,7 +226,7 @@ $(DOB)/.done: \
 	mkdir "$(DOB_TMP)"
 	./generate-breaks \
 		-G "$(DPGV)" \
-		-M "$(DPM)" \
+		-M "$(DPMV)" \
 		-c "$(CATEGORIES)" \
 		-q "$(DATA_TILE_GRID)" \
 		-O "$(DOB_TMP)"

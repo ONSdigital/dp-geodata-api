@@ -6,9 +6,10 @@
 # Variables this file is expected to set
 #
 #	MET_DOWNLOADS	list of downloaded metrics files
-#	MET_PROCESSED	list of processed standard format metrics files
+#	MET_STANDARD	list of normalised standard format metrics files
 #
 # Each file named in those variables should have targets in this file.
+# And there should be clean and realclean targets to clean these files up.
 
 # Location of nomis zips
 NOMIS_URL=https://www.nomisweb.co.uk/output/census/2011
@@ -59,13 +60,13 @@ realclean::
 
 
 # Zip files are extracted into a directory with an .extracted suffix.
-MET_PROCESSED=$(patsubst %.zip,%.extracted,$(MET_DOWNLOADS))
+MET_STANDARD=$(patsubst %.zip,%.extracted,$(MET_DOWNLOADS))
 
 # how to extract a zip file
-$(MET_PROCESSED): %.extracted: %.zip
+$(MET_STANDARD): %.extracted: %.zip
 	./atomic-rm.sh "$@".tmp
 	unzip -d "$@".tmp "$<"
 	mv "$@".tmp "$@"
 
 clean::
-	./atomic-rm.sh $(foreach path,$(MET_PROCESSED),"$(path)")
+	./atomic-rm.sh $(foreach path,$(MET_STANDARD),"$(path)")

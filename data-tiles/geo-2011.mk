@@ -6,7 +6,7 @@
 # Variables this file is expected to set
 #
 #	GEO_DOWNLOADS	list of downloaded geo files
-#	GEO_PROCESSED	list of processed geo files
+#	GEO_STANDARD	list of normalised geo files
 #
 # Each file named in those variables should have targets in this file.
 
@@ -85,9 +85,9 @@ STANDARD_MSOA=$(DPGV)/msoa.geojson
 STANDARD_OA=$(DPGV)/oa.geojson
 
 #
-# Set GEO_PROCESSED so parent make file can use processed files as targets.
+# Set GEO_STANDARD so parent make file can use processed files as targets.
 #
-GEO_PROCESSED=$(STANDARD_LAD) $(STANDARD_LSOA) $(STANDARD_MSOA) $(STANDARD_OA)
+GEO_STANDARD=$(STANDARD_LAD) $(STANDARD_LSOA) $(STANDARD_MSOA) $(STANDARD_OA)
 
 #
 # Rules to process geo files
