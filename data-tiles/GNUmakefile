@@ -253,10 +253,19 @@ clean::
 	./atomic-rm.sh "$(DOB_TMP)" "$(DOB)"
 
 #
-# tests
+# tests -- some rough cli sanity tests
 #
 
 test:: extract-categories
 	diff \
 		cmd/extract-categories/testdata/categories.txt \
 		<( ./extract-categories < cmd/extract-categories/testdata/content.json )
+
+test:: fake-data
+	diff \
+		cmd/fake-data/testdata/DATA.CSV \
+		<( ./fake-data \
+			-G cmd/fake-data/testdata \
+			-c cmd/fake-data/testdata/small-content.json \
+			-r 0 \
+		)
