@@ -18,9 +18,10 @@ const (
 func main() {
 	srcdir := flag.String("s", srcdir, "directory holding .CSV source files")
 	dstdir := flag.String("d", dstdir, "directory holding single-category .CSV files")
+	pattern := flag.String("p", "*DATA.CSV", "glob pattern to match source .CSV files/")
 	flag.Parse()
 
-	csvs, err := findcsvs(*srcdir)
+	csvs, err := findcsvs(*srcdir, *pattern)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,7 +53,7 @@ func main() {
 }
 
 // findcsvs returns a list of files named *DATA.CSV in dir
-func findcsvs(dir string) ([]string, error) {
+func findcsvs(dir, pattern string) ([]string, error) {
 	var csvs []string
 
 	err := filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
@@ -62,7 +63,7 @@ func findcsvs(dir string) ([]string, error) {
 		if info.Mode()&fs.ModeType != 0 {
 			return nil // must be regular file
 		}
-		isdata, err := filepath.Match("*DATA.CSV", info.Name())
+		isdata, err := filepath.Match(pattern, info.Name())
 		if err != nil {
 			return err
 		}
