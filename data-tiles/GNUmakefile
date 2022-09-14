@@ -9,10 +9,12 @@
 #	binaries -- compile Go programs (you may need -B)
 #
 #	download -- download geojson and metrics files
+#	download-cat -- download files for generating cateogry list
 #	download-met -- download just metrics
 #	download-geo -- download just geojson files
 #
 #	standard -- normalise downloaded geojson and metrics files
+#	standard-cat -- generate categories.txt
 #	standard-geo -- normalise just downloaded geojson (add bbox, set geotype, etc)
 #	standard-met -- normalise just downloaded metrics files to standard CSVs
 #
@@ -32,12 +34,14 @@
 #	CONTENT -- name of content.json file (default "content.json")
 #	GEOVERSION -- geography version (default "2011")
 #	METVERSION -- metrics version (default "2011")
+#	CATVERSION -- content.json version (default "2011")
 #
 # Or you can create a params.mk file and set those variables.
 #
 # Or you can say PARAMS=some-params.mk
 
 .DEFAULT_GOAL=all
+SHELL=bash
 
 # Try to include params.mk or $PARAMS, but no error if it's missing.
 PARAMS?=params.mk
@@ -51,6 +55,7 @@ CONTENT?=content.json
 
 GEOVERSION?=2011
 METVERSION?=2011
+CATVERSION?=2011
 
 #
 # Directory locations
@@ -76,6 +81,7 @@ DOT=$(DO)/tiles
 
 include geo-$(GEOVERSION).mk
 include met-$(METVERSION).mk
+include cat-$(CATVERSION).mk
 
 #
 # do everything
@@ -123,26 +129,21 @@ clean::
 	rm -f $(BINARIES)
 
 #
-# generate categories.txt from content.json
-#
-CATEGORIES=$(DPMV)/categories.txt
-$(CATEGORIES): extract-categories $(CONTENT)
-	./atomic.sh "$(CATEGORIES)" ./extract-categories < "$(CONTENT)"
-
-#
 # download targets
 #
 
-.PHONY: download-met download-geo download
+.PHONY: download-cat download-met download-geo download
+download-cat: $(CAT_DOWNLOADS)
 download-geo: $(GEO_DOWNLOADS)
 download-met: $(MET_DOWNLOADS)
-download: $(GEO_DOWNLOADS) $(MET_DOWNLOADS)
+download: $(CAT_DOWNLOADS) $(GEO_DOWNLOADS) $(MET_DOWNLOADS)
 
 #
 # processing and normalising
 #
 
-.PHONY: standard-geo standard-met standard
+.PHONY: standard-cat standard-geo standard-met standard
+standard-cat: $(CAT_STANDARD)
 standard-geo: $(GEO_STANDARD)
 standard-met: $(MET_STANDARD)
 standard: $(GEO_STANDARD) $(MET_STANDARD)
@@ -206,14 +207,14 @@ $(DOT)/.done: \
 		$(GEO_STANDARD) \
 		$(DPMV)/.done \
 		$(DATA_TILE_GRID) \
-		$(CATEGORIES) \
+		$(CAT_STANDARD) \
 		generate-tiles
 	./atomic-rm.sh "$(DOT_TMP)"
 	mkdir "$(DOT_TMP)"
 	./generate-tiles \
 		-G "$(DPGV)" \
 		-M "$(DPMV)" \
-		-c "$(CATEGORIES)" \
+		-c "$(CAT_STANDARD)" \
 		-q "$(DATA_TILE_GRID)" \
 		-O "$(DOT_TMP)"
 	touch "$(DOT_TMP)"/.done
@@ -235,14 +236,14 @@ $(DOB)/.done: \
 		$(GEO_STANDARD) \
 		$(DPMV)/.done \
 		$(DATA_TILE_GRID) \
-		$(CATEGORIES) \
+		$(CAT_STANDARD) \
 		generate-breaks
 	./atomic-rm.sh "$(DOB_TMP)"
 	mkdir "$(DOB_TMP)"
 	./generate-breaks \
 		-G "$(DPGV)" \
 		-M "$(DPMV)" \
-		-c "$(CATEGORIES)" \
+		-c "$(CAT_STANDARD)" \
 		-q "$(DATA_TILE_GRID)" \
 		-O "$(DOB_TMP)"
 	touch "$(DOB_TMP)"/.done
@@ -250,3 +251,12 @@ $(DOB)/.done: \
 	mv "$(DOB_TMP)" "$(DOB)"
 clean::
 	./atomic-rm.sh "$(DOB_TMP)" "$(DOB)"
+
+#
+# tests
+#
+
+test:: extract-categories
+	diff \
+		cmd/extract-categories/testdata/categories.txt \
+		<( ./extract-categories < cmd/extract-categories/testdata/content.json )
