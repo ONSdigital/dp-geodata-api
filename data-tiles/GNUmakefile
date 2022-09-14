@@ -29,17 +29,25 @@
 #
 #	D -- name of data directory (default "data")
 #	DATA_TILE_GRID -- name of quads and layers file (default "DataTileGrid.json")
-#	CATEGORIES -- name of categories file (default "categories.txt")
+#	CONTENT -- name of content.json file (default "content.json")
 #	GEOVERSION -- geography version (default "2011")
 #	METVERSION -- metrics version (default "2011")
+#
+# Or you can create a params.mk file and set those variables.
+#
+# Or you can say PARAMS=some-params.mk
 
 .DEFAULT_GOAL=all
+
+# Try to include params.mk or $PARAMS, but no error if it's missing.
+PARAMS?=params.mk
+-include $(PARAMS)
 
 #
 # Config files
 #
 DATA_TILE_GRID?=DataTileGrid.json
-CATEGORIES?=categories.txt
+CONTENT?=content.json
 
 GEOVERSION?=2011
 METVERSION?=2011
@@ -113,6 +121,13 @@ $(BINARIES):
 	GOBIN=`pwd` go install ./cmd/$@
 clean::
 	rm -f $(BINARIES)
+
+#
+# generate categories.txt from content.json
+#
+CATEGORIES=$(DPMV)/categories.txt
+$(CATEGORIES): extract-categories $(CONTENT)
+	./atomic.sh "$(CATEGORIES)" ./extract-categories < "$(CONTENT)"
 
 #
 # download targets
