@@ -1,0 +1,103 @@
+{
+  "content": [
+    {
+      "topics": [
+        {
+          "variables": [
+            {
+              "classifications": [
+                {
+		  "code": "legal_partnership_status_3a",
+                  "categories": [
+                    {
+                      "name": "Married or in a registered civil partnership",
+                      "code": "legal_partnership_status_3a-001"
+                    },
+                    {
+                      "name": "Other marital or civil partnership status",
+                      "code": "legal_partnership_status_3a-002"
+                    }
+                  ]
+                },
+                {
+                  "code": "legal_partnership_status_6a",
+                  "categories": [
+                    {
+                      "name": "Never married and never registered a civil partnership",
+                      "code": "legal_partnership_status_6a-001"
+                    },
+                    {
+                      "name": "Married or in a registered civil partnership",
+                      "code": "legal_partnership_status_6a-002"
+                    },
+                    {
+                      "name": "Separated, but still legally married or still legally in a civil partnership",
+                      "code": "legal_partnership_status_6a-003"
+                    },
+                    {
+                      "name": "Divorced or civil partnership dissolved",
+                      "code": "legal_partnership_status_6a-004"
+                    },
+                    {
+                      "name": "Widowed or surviving civil partnership partner",
+                      "code": "legal_partnership_status_6a-005"
+                    }
+                  ]
+                },
+                {
+                  "code": "legal_partnership_status",
+                  "categories": [
+                    {
+                      "name": "Never married and never registered a civil partnership",
+                      "code": "legal_partnership_status-001"
+                    },
+                    {
+                      "name": "Married: Opposite sex",
+                      "code": "legal_partnership_status-002"
+                    },
+                    {
+                      "name": "Married: Same sex",
+                      "code": "legal_partnership_status-003"
+                    },
+                    {
+                      "name": "In a registered civil partnership: Opposite sex",
+                      "code": "legal_partnership_status-004"
+                    },
+                    {
+                      "name": "In a registered civil partnership: Same sex",
+                      "code": "legal_partnership_status-005"
+                    },
+                    {
+                      "name": "Separated, but still married",
+                      "code": "legal_partnership_status-006"
+                    },
+                    {
+                      "name": "Separated, but still in a registered civil partnership",
+                      "code": "legal_partnership_status-007"
+                    },
+                    {
+                      "name": "Divorced",
+                      "code": "legal_partnership_status-008"
+                    },
+                    {
+                      "name": "Formerly in a civil partnership now legally dissolved",
+                      "code": "legal_partnership_status-009"
+                    },
+                    {
+                      "name": "Widowed",
+                      "code": "legal_partnership_status-010"
+                    },
+                    {
+                      "name": "Surviving partner from civil partnership",
+                      "code": "legal_partnership_status-011"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

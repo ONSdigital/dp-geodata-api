@@ -14,7 +14,12 @@ import (
 
 func main() {
 	cfile := flag.String("c", "content.json", "path to content.json")
+	classcode := flag.String("C", "", "classification code (eg legal_partnership_status_3a")
 	flag.Parse()
+
+	if *classcode == "" {
+		log.Fatal("must set classification code (-C)")
+	}
 
 	c, err := content.LoadName(*cfile)
 	if err != nil {
@@ -26,7 +31,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	cmap := buildMap(c)
+	cmap := buildMap(c, *classcode)
 	headings, keepcols := convertHeadings(records[0], cmap)
 
 	cwriter := csv.NewWriter(os.Stdout)
@@ -64,14 +69,24 @@ func loadSpreadsheet(f io.Reader) ([][]string, error) {
 }
 
 // buildMap creates the map from category name to category code.
-func buildMap(c *content.Content) map[string]string {
+func buildMap(c *content.Content, classcode string) map[string]string {
 	catmap := map[string]string{}
 
 	for _, group := range c.TopicGroups {
 		for _, topic := range group.Topics {
 			for _, variable := range topic.Variables {
 				for _, classification := range variable.Classifications {
+					if classification.Code != classcode {
+						continue
+					}
 					for _, category := range classification.Categories {
+						_, ok := catmap[category.Name]
+						if ok {
+							log.Fatalf(
+								"duplicate: %q\n",
+								category.Name,
+							)
+						}
 						catmap[category.Name] = category.Code
 					}
 				}

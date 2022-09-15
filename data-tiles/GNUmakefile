@@ -292,3 +292,12 @@ test:: generate-tiles
 		-c cmd/generate-tiles/testdata/categories.txt \
 		-q cmd/generate-tiles/testdata/quads.json
 	diff -r cmd/generate-tiles/testdata/output "$(TEST_OUTPUT)"
+
+test:: map-categories
+	diff \
+		cmd/map-categories/testdata/out.csv \
+		<( ./map-categories \
+			-c cmd/map-categories/testdata/content.json \
+			-C legal_partnership_status_6a \
+			<  cmd/map-categories/testdata/in.csv \
+		)
