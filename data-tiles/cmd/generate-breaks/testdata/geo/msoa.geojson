@@ -1,0 +1,48 @@
+{
+  "name": "Test MSOAs",
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E02000001",
+        "geotype": "MSOA"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E02000002",
+        "geotype": "MSOA"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E02000003",
+        "geotype": "MSOA"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E02000004",
+        "geotype": "MSOA"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E02000005",
+        "geotype": "MSOA"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E02000007",
+        "geotype": "MSOA"
+      }
+    }
+  ]
+}

@@ -269,3 +269,15 @@ test:: fake-data
 			-c cmd/fake-data/testdata/small-content.json \
 			-r 0 \
 		)
+
+TEST_OUTPUT=.test-output
+test:: generate-breaks
+	./atomic-rm.sh "$(TEST_OUTPUT)"
+	mkdir "$(TEST_OUTPUT)"
+	./generate-breaks \
+		-G cmd/generate-breaks/testdata/geo \
+		-M cmd/generate-breaks/testdata/metrics \
+		-O "$(TEST_OUTPUT)" \
+		-c cmd/generate-breaks/testdata/categories.txt \
+		-q cmd/generate-breaks/testdata/quads.json
+	diff -r cmd/generate-breaks/testdata/output "$(TEST_OUTPUT)"

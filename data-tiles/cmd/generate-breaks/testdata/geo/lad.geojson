@@ -1,0 +1,48 @@
+{
+  "name": "Test LADs",
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E06000001",
+        "geotype": "LAD"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E06000002",
+        "geotype": "LAD"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E06000003",
+        "geotype": "LAD"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E06000004",
+        "geotype": "LAD"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E06000005",
+        "geotype": "LAD"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E06000006",
+        "geotype": "LAD"
+      }
+    }
+  ]
+}

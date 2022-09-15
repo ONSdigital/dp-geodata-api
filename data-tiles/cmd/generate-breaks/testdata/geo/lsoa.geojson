@@ -1,0 +1,49 @@
+{
+  "name": "Test LSOAs",
+  "type": "FeatureCollection",
+  "bbox": null,
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E01000001",
+        "geotype": "LSOA"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E01000002",
+        "geotype": "LSOA"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E01000003",
+        "geotype": "LSOA"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E01000005",
+        "geotype": "LSOA"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E01000006",
+        "geotype": "LSOA"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E01000007",
+        "geotype": "LSOA"
+      }
+    }
+  ]
+}

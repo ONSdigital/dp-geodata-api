@@ -1,0 +1,48 @@
+{
+  "name": "Test OAs",
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E00000001",
+        "geotype": "OA"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E00000003",
+        "geotype": "OA"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E00000005",
+        "geotype": "OA"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E00000007",
+        "geotype": "OA"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E00000010",
+        "geotype": "OA"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "geocode": "E00000012",
+        "geotype": "OA"
+      }
+    }
+  ]
+}
