@@ -1,0 +1,62 @@
+{
+  "name": "Test LSOAs",
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "bbox": [
+        -0.099722888517677,
+        51.5154416842748,
+        -0.094744468765127,
+        51.5215848107683
+      ],
+      "properties": {
+        "geocode": "E01000001",
+        "geotype": "LSOA",
+        "note": "this one does not intersect tile"
+      }
+    },
+    {
+      "type": "Feature",
+      "bbox": [
+        -2.02384898255062,
+        55.7747165684831,
+        -1.99472103032386,
+        55.7938528119319
+      ],
+      "properties": {
+        "geocode": "E01027376",
+        "geotype": "LSOA",
+        "note": "this one intersects tile"
+      }
+    },
+    {
+      "type": "Feature",
+      "bbox": [
+        -2.08612303853828,
+        55.7582224077544,
+        -2.00701415837225,
+        55.811068541271
+      ],
+      "properties": {
+        "geocode": "E01027378",
+        "geotype": "LSOA",
+        "note": "this one intersects tile"
+      }
+    },
+    {
+      "type": "Feature",
+      "bbox": [
+        -3.93765923576057,
+        51.6081808433629,
+        -3.9282474536006,
+        51.6218208656011
+      ],
+      "properties": {
+        "geocode": "W01001958",
+        "geotype": "LSOA",
+        "note": "this one does not intersect tile"
+      }
+    }
+  ]
+}

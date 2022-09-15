@@ -1,0 +1,76 @@
+{
+  "name": "Test MSOAs",
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "bbox": [
+        -0.113795013886424,
+        51.5076188810585,
+        -0.072738138527668,
+        51.5232514279963
+      ],
+      "properties": {
+        "geocode": "E02000001",
+        "geotype": "MSOA",
+        "note": "does not intersect tile"
+      }
+    },
+    {
+      "type": "Feature",
+      "bbox": [
+        -5.68275403118242,
+        50.0482635420565,
+        -5.46474160256997,
+        50.2118949909657
+      ],
+      "properties": {
+        "geocode": "E02003947",
+        "geotype": "MSOA",
+        "note": "intersects tile"
+      }
+    },
+    {
+      "type": "Feature",
+      "bbox": [
+        -5.71703957585584,
+        50.0355230700775,
+        -5.59096340247193,
+        50.1556138126699
+      ],
+      "properties": {
+        "geocode": "E02003950",
+        "geotype": "MSOA",
+        "note": "does not intersect tile"
+      }
+    },
+    {
+      "type": "Feature",
+      "bbox": [
+        -6.37801247617016,
+        49.8823478319074,
+        -6.25240059501411,
+        49.9804684473979
+      ],
+      "properties": {
+        "geocode": "E02006781",
+        "geotype": "MSOA",
+        "note":"intersects tile"
+      }
+    },
+    {
+      "type": "Feature",
+      "bbox": [
+        -3.18618361308248,
+        51.4556823089264,
+        -3.15972709060394,
+        51.479974269681
+      ],
+      "properties": {
+        "geocode": "W02000423",
+        "geotype": "MSOA",
+        "note":"does not intersect tile"
+      }
+    }
+  ]
+}

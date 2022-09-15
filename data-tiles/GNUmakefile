@@ -9,7 +9,7 @@
 #	binaries -- compile Go programs (you may need -B)
 #
 #	download -- download geojson and metrics files
-#	download-cat -- download files for generating cateogry list
+#	download-cat -- download files for generating category list
 #	download-met -- download just metrics
 #	download-geo -- download just geojson files
 #
@@ -281,3 +281,14 @@ test:: generate-breaks
 		-c cmd/generate-breaks/testdata/categories.txt \
 		-q cmd/generate-breaks/testdata/quads.json
 	diff -r cmd/generate-breaks/testdata/output "$(TEST_OUTPUT)"
+
+test:: generate-tiles
+	./atomic-rm.sh "$(TEST_OUTPUT)"
+	mkdir "$(TEST_OUTPUT)"
+	./generate-tiles \
+		-G cmd/generate-tiles/testdata/geo \
+		-M cmd/generate-tiles/testdata/metrics \
+		-O "$(TEST_OUTPUT)" \
+		-c cmd/generate-tiles/testdata/categories.txt \
+		-q cmd/generate-tiles/testdata/quads.json
+	diff -r cmd/generate-tiles/testdata/output "$(TEST_OUTPUT)"
