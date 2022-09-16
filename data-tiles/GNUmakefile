@@ -250,8 +250,9 @@ test: \
 	test-extract-categories \
 	test-fake-data \
 	test-generate-breaks \
-	test-generrate-tiles \
-	test-map-categories	## run all tests
+	test-generate-tiles \
+	test-map-categories \
+	test-normalise	## run all tests
 
 .PHONY: test-extract-categories
 test-extract-categories: extract-categories	## test extract-categories cli
@@ -302,4 +303,16 @@ test-map-categories: map-categories	## test map-categories cli
 			-c cmd/map-categories/testdata/content.json \
 			-C legal_partnership_status_6a \
 			<  cmd/map-categories/testdata/in.csv \
+		)
+
+.PHONY: test-normalise
+test-normalise: normalise	## test normalise cli
+	diff \
+		<( jq < cmd/normalise/testdata/out.geojson ) \
+		<( ./normalise \
+			-c lad17cd \
+			-t LAD \
+			-e lad17nm \
+			-w lad17nmw \
+			< cmd/normalise/testdata/in.geojson | jq \
 		)
