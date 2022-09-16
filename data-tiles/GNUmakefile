@@ -1,65 +1,40 @@
 #
 # This makefile requires GNU make
 #
-# Important targets:
-#
-#	all -- do everything
-#
-#	dirs -- create data directory structure
-#	binaries -- compile Go programs (you may need -B)
-#
-#	download -- download geojson and metrics files
-#	download-cat -- download files for generating category list
-#	download-met -- download just metrics
-#	download-geo -- download just geojson files
-#
-#	standard -- normalise downloaded geojson and metrics files
-#	standard-cat -- generate categories.txt
-#	standard-geo -- normalise just downloaded geojson (add bbox, set geotype, etc)
-#	standard-met -- normalise just downloaded metrics files to standard CSVs
-#
-#	single-metrics -- split standard metrics CSVs into single-metric files
-#
-#	geos -- generate geojson files for every geography in standard geojson
-#	tiles - generate data tile CSVs
-#	breaks -- generate break
-#
-#	clean -- remove generated files
-#	realclean -- remove generated and downloaded files
-#
-# Command line variable overrides
-#
-#	D -- name of data directory (default "data")
-#	DATA_TILE_GRID -- name of quads and layers file (default "DataTileGrid.json")
-#	CONTENT -- name of content.json file (default "content.json")
-#	GEOVERSION -- geography version (default "2011")
-#	METVERSION -- metrics version (default "2011")
-#	CATVERSION -- content.json version (default "2011")
+# Run "make help" to get help about important targets and variables to set.
 #
 # Or you can create a params.mk file and set those variables.
 #
 # Or you can say PARAMS=some-params.mk
 
-.DEFAULT_GOAL=all
+.DEFAULT_GOAL=help
 SHELL=bash
 
 # Try to include params.mk or $PARAMS, but no error if it's missing.
+#= name of optional parameters file
 PARAMS?=params.mk
 -include $(PARAMS)
+
 
 #
 # Config files
 #
+#= name of quads file
 DATA_TILE_GRID?=DataTileGrid.json
+#= name of content.json file (? see CATVERSION)
 CONTENT?=content.json
 
+#= version of geography data to use
 GEOVERSION?=2011
+#= version of metrics data to use
 METVERSION?=2011
+#= version of categories.txt/content.json to use
 CATVERSION?=2011
 
 #
 # Directory locations
 #
+#= location of output directory
 D?=data
 
 DD=$D/downloads
@@ -89,7 +64,10 @@ include cat-$(CATVERSION).mk
 # (We have to use join because dependencies may be split over multiple lines.)
 .PHONY: help
 help:	## this help
+	@echo "Important Targets"
 	@./join.sh $(MAKEFILE_LIST) | egrep -h '\s##\s' | sort | awk 'BEGIN{FS=":.*?## "}{printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo "Important Variables (set on command line)"
+	@./join2.sh $(MAKEFILE_LIST) | egrep -h '^#=' | awk 'BEGIN{FS="#=|\\??="}{printf "\033[36m%-20s\033[0m%s (\033[36m%s\033[0m)\n", $$3, $$2, $$4}' | sort
 
 #
 # do everything
@@ -109,7 +87,7 @@ clean::		## remove generated files
 # data directory structure
 #
 .PHONY: dirs
-dirs:	## create output directories (must set parameter variables)
+dirs:	## create output directories (must set Important Variables)
 	mkdir -p $(DDGV) $(DDMV) $(DPGV) $(DPMV) $(DOG) $(DOB) $(DOT)
 
 #
