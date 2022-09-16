@@ -84,24 +84,32 @@ include met-$(METVERSION).mk
 include cat-$(CATVERSION).mk
 
 #
+# help
+#
+# (We have to use join because dependencies may be split over multiple lines.)
+.PHONY: help
+help:	## this help
+	@./join.sh $(MAKEFILE_LIST) | egrep -h '\s##\s' | sort | awk 'BEGIN{FS=":.*?## "}{printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+#
 # do everything
 #
 .PHONY: all
-all: dirs $(DOG)/.done $(DOT)/.done $(DOB)/.done
+all: dirs $(DOG)/.done $(DOT)/.done $(DOB)/.done	## build all output files
 
 #
 # cleanup
 #
 .PHONY: realclean
-realclean:: clean
+realclean:: clean	## remove downloaded and generated files
 .PHONY: clean
-clean::
+clean::		## remove generated files
 
 #
 # data directory structure
 #
 .PHONY: dirs
-dirs:
+dirs:	## create output directories (must set parameter variables)
 	mkdir -p $(DDGV) $(DDMV) $(DPGV) $(DPMV) $(DOG) $(DOB) $(DOT)
 
 #
@@ -121,7 +129,7 @@ BINARIES=\
 	xls2csv
 
 .PHONY: binaries
-binaries: $(BINARIES)
+binaries: $(BINARIES)	## build Go binaries (probably want -B also)
 
 $(BINARIES):
 	GOBIN=`pwd` go install ./cmd/$@
@@ -133,20 +141,20 @@ clean::
 #
 
 .PHONY: download-cat download-met download-geo download
-download-cat: $(CAT_DOWNLOADS)
-download-geo: $(GEO_DOWNLOADS)
-download-met: $(MET_DOWNLOADS)
-download: $(CAT_DOWNLOADS) $(GEO_DOWNLOADS) $(MET_DOWNLOADS)
+download-cat: $(CAT_DOWNLOADS)	## download content.json/categories.txt
+download-geo: $(GEO_DOWNLOADS)	## download geojson and related files
+download-met: $(MET_DOWNLOADS)	## download metrics (eg census CSVs)
+download: $(CAT_DOWNLOADS) $(GEO_DOWNLOADS) $(MET_DOWNLOADS)	## download everything
 
 #
 # processing and normalising
 #
 
 .PHONY: standard-cat standard-geo standard-met standard
-standard-cat: $(CAT_STANDARD)
-standard-geo: $(GEO_STANDARD)
-standard-met: $(MET_STANDARD)
-standard: $(GEO_STANDARD) $(MET_STANDARD)
+standard-cat: $(CAT_STANDARD)	## normalise content.json/categories.txt
+standard-geo: $(GEO_STANDARD)	## normalise geojson files
+standard-met: $(MET_STANDARD)	## normalise metrics CSVs
+standard: $(GEO_STANDARD) $(MET_STANDARD)	## normalise everything
 
 #
 # geos
@@ -154,7 +162,7 @@ standard: $(GEO_STANDARD) $(MET_STANDARD)
 # All the output geojson files end up in a a single directory, so it is all or nothing.
 
 .PHONY: geos
-geos: $(DOG)/.done
+geos: $(DOG)/.done	## generate output geojson files
 
 DOG_TMP=$(DOG).tmp
 
@@ -178,7 +186,7 @@ clean::
 # All the single-metric files end up in the same directory, so it is all or nothing.
 
 .PHONY: single-metrics
-single-metrics: $(DPMV)/.done
+single-metrics: $(DPMV)/.done	## generate output single-metrics CSVs
 
 DPMV_TMP=$(DPMV).tmp
 
@@ -199,7 +207,7 @@ clean::
 #
 
 .PHONY: tiles
-tiles: $(DOT)/.done
+tiles: $(DOT)/.done	## generate output data tile files
 
 DOT_TMP=$(DOT).tmp
 
@@ -228,7 +236,7 @@ clean::
 #
 
 .PHONY: breaks
-breaks: $(DOB)/.done
+breaks: $(DOB)/.done	## generate output breaks files
 
 DOB_TMP=$(DOB).tmp
 
@@ -256,12 +264,26 @@ clean::
 # tests -- some rough cli sanity tests
 #
 
-test:: extract-categories
+# If a test writes output, use TEST_OUTPUT directory.
+TEST_OUTPUT=.test-output
+
+.PHONY: test
+test: \
+	test-extract-categories \
+	test-fake-data \
+	test-generate-breaks \
+	test-generrate-tiles \
+	test-map-categories	## run all tests
+
+.PHONY: test-extract-categories
+test-extract-categories: extract-categories	## test extract-categories cli
 	diff \
 		cmd/extract-categories/testdata/categories.txt \
 		<( ./extract-categories < cmd/extract-categories/testdata/content.json )
 
-test:: fake-data
+
+.PHONY: test-fake-data
+test-fake-data: fake-data	## test fake-data cli
 	diff \
 		cmd/fake-data/testdata/DATA.CSV \
 		<( ./fake-data \
@@ -270,8 +292,8 @@ test:: fake-data
 			-r 0 \
 		)
 
-TEST_OUTPUT=.test-output
-test:: generate-breaks
+.PHONY: test-generate-breaks
+test-generate-breaks: generate-breaks	## test generate-breaks cli
 	./atomic-rm.sh "$(TEST_OUTPUT)"
 	mkdir "$(TEST_OUTPUT)"
 	./generate-breaks \
@@ -282,7 +304,8 @@ test:: generate-breaks
 		-q cmd/generate-breaks/testdata/quads.json
 	diff -r cmd/generate-breaks/testdata/output "$(TEST_OUTPUT)"
 
-test:: generate-tiles
+.PHONY: test-generate-tiles
+test-generate-tiles: generate-tiles	## test generate-tiles cli
 	./atomic-rm.sh "$(TEST_OUTPUT)"
 	mkdir "$(TEST_OUTPUT)"
 	./generate-tiles \
@@ -293,7 +316,8 @@ test:: generate-tiles
 		-q cmd/generate-tiles/testdata/quads.json
 	diff -r cmd/generate-tiles/testdata/output "$(TEST_OUTPUT)"
 
-test:: map-categories
+.PHONY: test-map-categories
+test-map-categories: map-categories	## test map-categories cli
 	diff \
 		cmd/map-categories/testdata/out.csv \
 		<( ./map-categories \
