@@ -252,7 +252,8 @@ test: \
 	test-generate-breaks \
 	test-generate-tiles \
 	test-map-categories \
-	test-normalise	## run all tests
+	test-normalise	\
+	test-recode-lads	## run all tests
 
 .PHONY: test-extract-categories
 test-extract-categories: extract-categories	## test extract-categories cli
@@ -315,4 +316,13 @@ test-normalise: normalise	## test normalise cli
 			-e lad17nm \
 			-w lad17nmw \
 			< cmd/normalise/testdata/in.geojson | jq \
+		)
+
+.PHONY: test-recode-lads
+test-recode-lads: recode-lads	## test recode-lads cli
+	diff \
+		<( jq -S < cmd/recode-lads/testdata/out.geojson ) \
+		<( ./recode-lads \
+			-r cmd/recode-lads/testdata/recode-lads.csv \
+			< cmd/recode-lads/testdata/in.geojson | jq -S \
 		)
