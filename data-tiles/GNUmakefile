@@ -254,7 +254,8 @@ test: \
 	test-map-categories \
 	test-normalise	\
 	test-recode-lads \
-	test-rename-msoas	## run all tests
+	test-rename-msoas \
+	test-split-geojson	## run all tests
 
 .PHONY: test-extract-categories
 test-extract-categories: extract-categories	## test extract-categories cli
@@ -336,3 +337,10 @@ test-rename-msoas: rename-msoas	## test rename-msoas cli
 			-n cmd/rename-msoas/testdata/msoa-names.csv \
 			< cmd/rename-msoas/testdata/in.geojson | jq -S \
 		)
+
+.PHONY: test-split-geojson
+test-split-geojson: split-geojson	## test split-geojson cli
+	./atomic-rm.sh "$(TEST_OUTPUT)"
+	mkdir "$(TEST_OUTPUT)"
+	./split-geojson -d "$(TEST_OUTPUT)" < cmd/split-geojson/testdata/in.geojson
+	diff -r cmd/split-geojson/testdata/out "$(TEST_OUTPUT)"

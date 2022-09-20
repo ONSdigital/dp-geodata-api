@@ -58,7 +58,7 @@ func process(codeprop, enameprop, typeprop, dir string) error {
 	stride := nfeat / 100
 
 	for i, feat := range col.Features {
-		if i%stride == 0 {
+		if stride == 0 || i%stride == 0 {
 			fmt.Fprintf(os.Stderr, " %d/%d %d%%\r", i, nfeat, (i*100)/nfeat)
 		}
 		code, ok := feat.Properties[codeprop].(string)
