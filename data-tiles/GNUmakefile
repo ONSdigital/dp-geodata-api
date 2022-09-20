@@ -256,7 +256,8 @@ test: \
 	test-recode-lads \
 	test-rename-msoas \
 	test-split-geojson \
-	test-split-metrics	## run all tests
+	test-split-metrics \
+	test-xls2csv	## run all tests
 
 .PHONY: test-extract-categories
 test-extract-categories: extract-categories	## test extract-categories cli
@@ -352,3 +353,9 @@ test-split-metrics: split-metrics	## test split-metrics cli
 	mkdir "$(TEST_OUTPUT)"
 	./split-metrics -s cmd/split-metrics/testdata/in -d "$(TEST_OUTPUT)"
 	diff -r cmd/split-metrics/testdata/out "$(TEST_OUTPUT)"
+
+.PHONY: test-xls2csv
+test-xls2csv: xls2csv	## test xls2csv cli
+	diff \
+		cmd/xls2csv/testdata/out.csv \
+		<( ./xls2csv < cmd/xls2csv/testdata/in.xlsx )
