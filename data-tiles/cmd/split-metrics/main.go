@@ -18,7 +18,7 @@ const (
 func main() {
 	srcdir := flag.String("s", srcdir, "directory holding .CSV source files")
 	dstdir := flag.String("d", dstdir, "directory holding single-category .CSV files")
-	pattern := flag.String("p", "*DATA.CSV", "glob pattern to match source .CSV files/")
+	pattern := flag.String("p", "*DATA.CSV", "glob pattern to match source .CSV files")
 	flag.Parse()
 
 	csvs, err := findcsvs(*srcdir, *pattern)
