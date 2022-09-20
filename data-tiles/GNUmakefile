@@ -253,7 +253,8 @@ test: \
 	test-generate-tiles \
 	test-map-categories \
 	test-normalise	\
-	test-recode-lads	## run all tests
+	test-recode-lads \
+	test-rename-msoas	## run all tests
 
 .PHONY: test-extract-categories
 test-extract-categories: extract-categories	## test extract-categories cli
@@ -325,4 +326,13 @@ test-recode-lads: recode-lads	## test recode-lads cli
 		<( ./recode-lads \
 			-r cmd/recode-lads/testdata/recode-lads.csv \
 			< cmd/recode-lads/testdata/in.geojson | jq -S \
+		)
+
+.PHONY: test-rename-msoas
+test-rename-msoas: rename-msoas	## test rename-msoas cli
+	diff \
+		<( jq -S < cmd/rename-msoas/testdata/out.geojson ) \
+		<( ./rename-msoas \
+			-n cmd/rename-msoas/testdata/msoa-names.csv \
+			< cmd/rename-msoas/testdata/in.geojson | jq -S \
 		)
