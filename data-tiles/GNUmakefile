@@ -348,11 +348,21 @@ test-split-geojson: split-geojson	## test split-geojson cli
 	diff -r cmd/split-geojson/testdata/out "$(TEST_OUTPUT)"
 
 .PHONY: test-split-metrics
-test-split-metrics: split-metrics	## test split-metrics cli
+test-split-metrics: \
+	test-split-metrics-non-ratio \
+	test-split-metrics-ratio	## test split-metrics cli
+
+test-split-metrics-non-ratio: split-metrics	## test split-metrics cli in non-ratio mode
 	./atomic-rm.sh "$(TEST_OUTPUT)"
 	mkdir "$(TEST_OUTPUT)"
 	./split-metrics -s cmd/split-metrics/testdata/in -d "$(TEST_OUTPUT)"
-	diff -r cmd/split-metrics/testdata/out "$(TEST_OUTPUT)"
+	diff -r cmd/split-metrics/testdata/out-non-ratio "$(TEST_OUTPUT)"
+
+test-split-metrics-ratio: split-metrics	## test split-metrics cli in ratio mode
+	./atomic-rm.sh "$(TEST_OUTPUT)"
+	mkdir "$(TEST_OUTPUT)"
+	./split-metrics -R -s cmd/split-metrics/testdata/in -d "$(TEST_OUTPUT)"
+	diff -r cmd/split-metrics/testdata/out-ratio "$(TEST_OUTPUT)"
 
 .PHONY: test-xls2csv
 test-xls2csv: xls2csv	## test xls2csv cli

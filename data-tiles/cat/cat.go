@@ -121,3 +121,18 @@ func GuessTotalsCat(cat types.Category) (types.Category, error) {
 	s := fmt.Sprintf("%s%s%s%0*d", matches[1], matches[2], matches[3], digits, 1)
 	return types.Category(s), nil
 }
+
+// IsTotalsCat is true if cat is a totals category (ends in 0001)
+func IsTotalsCat(cat types.Category) bool {
+	matches := catRegex.FindStringSubmatch(string(cat))
+	if len(matches) != 5 {
+		return false
+	}
+
+	n, err := strconv.Atoi(matches[4])
+	if err != nil {
+		return false
+	}
+
+	return n == 1
+}
