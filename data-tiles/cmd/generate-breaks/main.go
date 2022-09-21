@@ -21,6 +21,7 @@ func main() {
 	geodir := flag.String("G", "data/processed/geo", "directory holding geojson files for each geotype")
 	metdir := flag.String("M", "data/processed/metrics", "directory holding metrics files for each category")
 	outdir := flag.String("O", "data/output/breaks", "output directory")
+	calcRatios := flag.Bool("R", false, "calculate ratios")
 	flag.Parse()
 
 	quads, err := grid.Load(*gridfile)
@@ -42,17 +43,25 @@ func main() {
 		log.Fatal(err)
 	}
 
-	allcats, err := cat.IncludeTotalCats(catlist)
+	// if we are calculating ratios, we also want to load the
+	// totals categories
+	var loadcats []types.Category
+	if !*calcRatios {
+		loadcats = catlist
+	} else {
+		allcats, err := cat.IncludeTotalCats(catlist)
+		if err != nil {
+			log.Fatal(err)
+		}
+		loadcats = allcats
+	}
+
+	metrics, err := cat.LoadMetrics(loadcats, *metdir)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	metrics, err := cat.LoadMetrics(allcats, *metdir)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err := genbreaks(wanttypes, geotypes, catlist, metrics, *outdir); err != nil {
+	if err := genbreaks(wanttypes, geotypes, catlist, metrics, *calcRatios, *outdir); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -91,6 +100,21 @@ type stats map[types.Category]map[string][]float64
 
 // genbreaks generates the breaks files
 func genbreaks(
+	wanttypes []types.Geotype,
+	geotypes map[types.Geocode]types.Geotype,
+	cats []types.Category,
+	metrics map[types.Category]map[types.Geocode]types.Value,
+	calcMetrics bool,
+	dir string,
+) error {
+	if calcMetrics {
+		return genbreaksWithRatios(wanttypes, geotypes, cats, metrics, dir)
+	} else {
+		return genbreaksWithoutRatios(wanttypes, geotypes, cats, metrics, dir)
+	}
+}
+
+func genbreaksWithRatios(
 	wanttypes []types.Geotype,
 	geotypes map[types.Geocode]types.Geotype,
 	cats []types.Category,
@@ -139,6 +163,61 @@ func genbreaks(
 			ratio := float64(value / total)
 
 			ratios[geotype] = append(ratios[geotype], ratio)
+		}
+
+		for geotype, values := range ratios {
+			breaks, err := getBreaks(values, 5)
+			if err != nil {
+				return fmt.Errorf(
+					"%s %s (%d values): %w",
+					geotype,
+					thiscat,
+					len(values),
+					err,
+				)
+			}
+
+			minmax := getMinMax(values)
+
+			result := stats{
+				thiscat: map[string][]float64{
+					string(geotype):              breaks,
+					string(geotype) + "_min_max": minmax,
+				},
+			}
+
+			if err := saveStats(dir, geotype, thiscat, result); err != nil {
+				return fmt.Errorf("%s %s: %w", geotype, thiscat, err)
+			}
+		}
+	}
+	return nil
+}
+
+func genbreaksWithoutRatios(
+	wanttypes []types.Geotype,
+	geotypes map[types.Geocode]types.Geotype,
+	cats []types.Category,
+	metrics map[types.Category]map[types.Geocode]types.Value,
+	dir string,
+) error {
+	for _, thiscat := range cats {
+		fmt.Fprintf(os.Stderr, " %s\r", thiscat)
+
+		ratios := make(map[types.Geotype][]float64)
+
+		for geocode, value := range metrics[thiscat] {
+			geotype, ok := geotypes[geocode]
+			if !ok {
+				log.Printf(
+					"%s: no geotype for %s, skipping geo",
+					thiscat,
+					geocode,
+				)
+				continue
+			}
+			ratio := value
+			ratios[geotype] = append(ratios[geotype], float64(ratio))
 		}
 
 		for geotype, values := range ratios {

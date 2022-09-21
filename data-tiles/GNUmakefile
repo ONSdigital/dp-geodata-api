@@ -277,7 +277,25 @@ test-fake-data: fake-data	## test fake-data cli
 		)
 
 .PHONY: test-generate-breaks
-test-generate-breaks: generate-breaks	## test generate-breaks cli
+test-generate-breaks: \
+	test-generate-breaks-ratio \
+	test-generate-breaks-non-ratio	## test generate-breaks
+
+.PHONY: test-generate-breaks-ratio
+test-generate-breaks-ratio: generate-breaks	## test generate-breaks cli in ratio mode
+	./atomic-rm.sh "$(TEST_OUTPUT)"
+	mkdir "$(TEST_OUTPUT)"
+	./generate-breaks \
+		-R \
+		-G cmd/generate-breaks/testdata/geo \
+		-M cmd/generate-breaks/testdata/metrics \
+		-O "$(TEST_OUTPUT)" \
+		-c cmd/generate-breaks/testdata/categories.txt \
+		-q cmd/generate-breaks/testdata/quads.json
+	diff -r cmd/generate-breaks/testdata/output-ratio "$(TEST_OUTPUT)"
+
+.PHONY: test-generate-breaks-non-ratio
+test-generate-breaks-non-ratio: generate-breaks	## test generate-breaks cli in non-ratio mode
 	./atomic-rm.sh "$(TEST_OUTPUT)"
 	mkdir "$(TEST_OUTPUT)"
 	./generate-breaks \
@@ -286,7 +304,8 @@ test-generate-breaks: generate-breaks	## test generate-breaks cli
 		-O "$(TEST_OUTPUT)" \
 		-c cmd/generate-breaks/testdata/categories.txt \
 		-q cmd/generate-breaks/testdata/quads.json
-	diff -r cmd/generate-breaks/testdata/output "$(TEST_OUTPUT)"
+	diff -r cmd/generate-breaks/testdata/output-non-ratio "$(TEST_OUTPUT)"
+
 
 .PHONY: test-generate-tiles
 test-generate-tiles: generate-tiles	## test generate-tiles cli
