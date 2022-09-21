@@ -39,12 +39,7 @@ func LoadCategories(fname string) ([]types.Category, error) {
 func LoadMetrics(cats []types.Category, dir string) (map[types.Category]map[types.Geocode]types.Value, error) {
 	metrics := map[types.Category]map[types.Geocode]types.Value{}
 
-	allcats, err := addTotals(cats)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, cat := range allcats {
+	for _, cat := range cats {
 		log.Printf("Loading %s", cat)
 		csv, err := loadCatfile(filepath.Join(dir, string(cat)+".CSV"))
 		if err != nil {
@@ -71,8 +66,8 @@ func LoadMetrics(cats []types.Category, dir string) (map[types.Category]map[type
 	return metrics, nil
 }
 
-// addTotals adds totals categories to list of categories we want
-func addTotals(cats []types.Category) ([]types.Category, error) {
+// IncludeTotalCats adds totals categories to list of categories we want
+func IncludeTotalCats(cats []types.Category) ([]types.Category, error) {
 	totcats := map[types.Category]bool{}
 
 	for _, cat := range cats {

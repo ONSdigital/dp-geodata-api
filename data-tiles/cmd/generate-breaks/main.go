@@ -41,7 +41,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	metrics, err := cat.LoadMetrics(catlist, *metdir)
+
+	allcats, err := cat.IncludeTotalCats(catlist)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	metrics, err := cat.LoadMetrics(allcats, *metdir)
 	if err != nil {
 		log.Fatal(err)
 	}
