@@ -187,7 +187,7 @@ func findTotals(table [][]string) (map[string]float64, error) {
 				return nil, fmt.Errorf("row %d, col %d (%q): %w", rown, coln, row[coln], err)
 			}
 			if val == 0.0 {
-				return nil, fmt.Errorf("row %d, col %d: zero value cannot be used in ratios")
+				return nil, fmt.Errorf("row %d, col %d: zero value cannot be used in ratios", rown, coln)
 			}
 			totals[geocode] = val
 		}
