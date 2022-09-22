@@ -21,6 +21,7 @@ func generateTiles(
 	quadset map[types.Geotype][]grid.Quad,
 	bounds map[types.Geotype]map[types.Geocode]*geom.Bounds,
 	metrics map[types.Category]map[types.Geocode]types.Value,
+	calcRatios bool,
 	dir string,
 ) error {
 	// for every geotype in DataTilesGrid.json
@@ -39,7 +40,15 @@ func generateTiles(
 			)
 
 			// generate category files for this quad
-			err := generateCatFiles(geotype, q.Tilename, cats, geos, metrics, dir)
+			err := generateCatFiles(
+				geotype,
+				q.Tilename,
+				cats,
+				geos,
+				metrics,
+				calcRatios,
+				dir,
+			)
 			if err != nil {
 				return err
 			}
@@ -65,6 +74,7 @@ func generateCatFiles(
 	cats []types.Category,
 	geos []types.Geocode,
 	metrics map[types.Category]map[types.Geocode]types.Value,
+	wantRatios bool,
 	dir string,
 ) error {
 	d := filepath.Join(dir, geotype.Pathname(), tilename)
@@ -79,18 +89,21 @@ func generateCatFiles(
 			return fmt.Errorf("%s %s: %w", geotype, thiscat, err)
 		}
 
-		totcat, err := cat.GuessTotalsCat(thiscat)
-		if err != nil {
-			return fmt.Errorf("%s %s: %w", geotype, thiscat, err)
-		}
+		if wantRatios {
+			totcat, err := cat.GuessTotalsCat(thiscat)
+			if err != nil {
+				return fmt.Errorf("%s %s: %w", geotype, thiscat, err)
+			}
 
-		ratios, err := calcRatios(values, metrics[totcat])
-		if err != nil {
-			return fmt.Errorf("%s %s: %w", geotype, thiscat, err)
+			ratios, err := calcRatios(values, metrics[totcat])
+			if err != nil {
+				return fmt.Errorf("%s %s: %w", geotype, thiscat, err)
+			}
+			values = ratios
 		}
 
 		// save ratios to tile's category file
-		if err := writeCatFile(d, thiscat, ratios); err != nil {
+		if err := writeCatFile(d, thiscat, values); err != nil {
 			return err
 		}
 	}

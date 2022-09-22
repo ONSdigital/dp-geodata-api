@@ -308,7 +308,23 @@ test-generate-breaks-non-ratio: generate-breaks	## test generate-breaks cli in n
 
 
 .PHONY: test-generate-tiles
-test-generate-tiles: generate-tiles	## test generate-tiles cli
+test-generate-tiles: \
+	test-generate-tiles-ratio \
+	test-generate-tiles-non-ratio	## test generate-tiles cli
+
+test-generate-tiles-ratio: generate-tiles	## test generate-tiles cli in ratio mode
+	./atomic-rm.sh "$(TEST_OUTPUT)"
+	mkdir "$(TEST_OUTPUT)"
+	./generate-tiles \
+		-R \
+		-G cmd/generate-tiles/testdata/geo \
+		-M cmd/generate-tiles/testdata/metrics \
+		-O "$(TEST_OUTPUT)" \
+		-c cmd/generate-tiles/testdata/categories.txt \
+		-q cmd/generate-tiles/testdata/quads.json
+	diff -r cmd/generate-tiles/testdata/output-ratio "$(TEST_OUTPUT)"
+
+test-generate-tiles-non-ratio: generate-tiles	## test generate-tiles cli in non-ratio mode
 	./atomic-rm.sh "$(TEST_OUTPUT)"
 	mkdir "$(TEST_OUTPUT)"
 	./generate-tiles \
@@ -317,7 +333,7 @@ test-generate-tiles: generate-tiles	## test generate-tiles cli
 		-O "$(TEST_OUTPUT)" \
 		-c cmd/generate-tiles/testdata/categories.txt \
 		-q cmd/generate-tiles/testdata/quads.json
-	diff -r cmd/generate-tiles/testdata/output "$(TEST_OUTPUT)"
+	diff -r cmd/generate-tiles/testdata/output-non-ratio "$(TEST_OUTPUT)"
 
 .PHONY: test-map-categories
 test-map-categories: map-categories	## test map-categories cli

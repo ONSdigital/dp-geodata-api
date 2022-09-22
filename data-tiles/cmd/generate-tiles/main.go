@@ -7,6 +7,7 @@ import (
 	"github.com/ONSdigital/dp-geodata-api/data-tiles/cat"
 	"github.com/ONSdigital/dp-geodata-api/data-tiles/geos"
 	"github.com/ONSdigital/dp-geodata-api/data-tiles/grid"
+	"github.com/ONSdigital/dp-geodata-api/data-tiles/types"
 )
 
 func main() {
@@ -15,6 +16,7 @@ func main() {
 	geodir := flag.String("G", "data/processed/geo", "directory holding geojson files for each geotype")
 	metdir := flag.String("M", "data/processed/metrics", "directory holding metrics files for each category")
 	outdir := flag.String("O", "data/output/tiles", "output directory")
+	calcRatios := flag.Bool("R", false, "calculate ratios")
 	flag.Parse()
 
 	catlist, err := cat.LoadCategories(*catfile)
@@ -22,12 +24,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	allcats, err := cat.IncludeTotalCats(catlist)
-	if err != nil {
-		log.Fatal(err)
+	var loadcats []types.Category
+	if !*calcRatios {
+		loadcats = catlist
+	} else {
+		loadcats, err = cat.IncludeTotalCats(catlist)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
-	metrics, err := cat.LoadMetrics(allcats, *metdir)
+	metrics, err := cat.LoadMetrics(loadcats, *metdir)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -47,6 +54,7 @@ func main() {
 		quads,
 		bounds,
 		metrics,
+		*calcRatios,
 		*outdir,
 	)
 	if err != nil {
