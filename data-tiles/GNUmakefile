@@ -49,7 +49,8 @@ DPGV=$(DPG)/$(GEOVERSION)
 DPM=$(DP)/metrics
 DPMV=$(DPM)/$(METVERSION)
 
-DO=$D/output/geo-$(GEOVERSION)+met-$(METVERSION)
+#= output directory
+DO?=$D/output
 DOG=$(DO)/geo
 DOB=$(DO)/breaks
 DOT=$(DO)/tiles
@@ -168,12 +169,10 @@ single-metrics: $(DPMV)/.done	## generate output single-metrics CSVs
 
 DPMV_TMP=$(DPMV).tmp
 
-# XXX may need to change split-metrics to take list of directories and/or different
-# XXX glob name other than *DATA.CSV
 $(DPMV)/.done: $(MET_STANDARD) split-metrics
 	./atomic-rm.sh "$(DPMV_TMP)"
 	mkdir "$(DPMV_TMP)"
-	./split-metrics -s "$(DDMV)" -d "$(DPMV_TMP)"
+	./split-metrics -R -s "$(DDMV)" -d "$(DPMV_TMP)"
 	touch "$(DPMV_TMP)"/.done
 	./atomic-rm.sh "$(DPMV)"
 	mv "$(DPMV_TMP)" "$(DPMV)"

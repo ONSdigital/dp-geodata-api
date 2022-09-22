@@ -211,7 +211,7 @@ func genRatioCSV(w *csv.Writer, table [][]string, coln int, totals map[string]fl
 		if err != nil {
 			return fmt.Errorf("row %d, col %d (%q): %w", rown, coln, row[coln], err)
 		}
-		ratio := strconv.FormatFloat(float64(val/totals[geocode]), 'g', 13, 64)
+		ratio := strconv.FormatFloat(float64(val/totals[geocode]), 'g', -1, 64)
 		if err := w.Write([]string{geocode, ratio}); err != nil {
 			return err
 		}
