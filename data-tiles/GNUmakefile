@@ -244,6 +244,8 @@ clean::
 
 # If a test writes output, use TEST_OUTPUT directory.
 TEST_OUTPUT=.test-output
+clean::
+	./atomic-rm.sh ./test-output
 
 .PHONY: test
 test: \
