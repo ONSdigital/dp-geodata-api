@@ -13,3 +13,4 @@
 # For 2011 categories, all we have is categories.txt in this repo.
 CAT_DOWNLOADS=categories.txt
 CAT_STANDARD=$(CAT_DOWNLOADS)
+CALC_RATIOS=-R

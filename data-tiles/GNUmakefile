@@ -30,6 +30,8 @@ GEOVERSION?=2011
 METVERSION?=2011
 #= version of categories.txt/content.json to use
 CATVERSION?=2011
+#= set to "-R" to calculate metric ratios
+CALC_RATIOS?=
 
 #
 # Directory locations
@@ -172,7 +174,7 @@ DPMV_TMP=$(DPMV).tmp
 $(DPMV)/.done: $(MET_STANDARD) split-metrics
 	./atomic-rm.sh "$(DPMV_TMP)"
 	mkdir "$(DPMV_TMP)"
-	./split-metrics -R -s "$(DDMV)" -d "$(DPMV_TMP)"
+	./split-metrics $(CALC_RATIOS) -s "$(DDMV)" -d "$(DPMV_TMP)"
 	touch "$(DPMV_TMP)"/.done
 	./atomic-rm.sh "$(DPMV)"
 	mv "$(DPMV_TMP)" "$(DPMV)"
