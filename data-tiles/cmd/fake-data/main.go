@@ -9,23 +9,23 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/ONSdigital/dp-geodata-api/data-tiles/content"
+	"github.com/ONSdigital/dp-geodata-api/data-tiles/cat"
 	"github.com/ONSdigital/dp-geodata-api/data-tiles/geos"
+	"github.com/ONSdigital/dp-geodata-api/data-tiles/types"
 )
 
 func main() {
-	cfile := flag.String("c", "cmd/fake-data/testdata/small-content.json", "path to content.json")
+	catfile := flag.String("c", "cmd/fake-data/testdata/categories.txt", "path to categories.txt")
 	geodir := flag.String("G", "cmd/fake-data/testdata", "directory holding geojson files ")
 	seed := flag.Int64("r", 0, "random number seed")
 	flag.Parse()
 
-	log.Printf("Loading %s\n", *cfile)
-	c, err := content.LoadName(*cfile)
+	log.Printf("Loading %s\n", *catfile)
+	cats, err := cat.LoadCategories(*catfile)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	cats := c.Categories()
 	log.Printf("\tfound %d categories\n", len(cats))
 
 	geos, err := loadGeos(*geodir)
@@ -64,12 +64,15 @@ func loadGeos(dir string) ([]string, error) {
 	return geolist, nil
 }
 
-func genFake(cats, geos []string, seed int64) error {
+func genFake(cats []types.Category, geos []string, seed int64) error {
 	rnd := rand.New(rand.NewSource(seed))
 
 	w := csv.NewWriter(os.Stdout)
 
-	headings := append([]string{"GeographyCode"}, cats...)
+	headings := []string{"GeographyCode"}
+	for _, cat := range cats {
+		headings = append(headings, string(cat))
+	}
 	if err := w.Write(headings); err != nil {
 		return err
 	}

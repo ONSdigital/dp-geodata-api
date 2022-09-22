@@ -273,7 +273,7 @@ test-fake-data: fake-data	## test fake-data cli
 		cmd/fake-data/testdata/DATA.CSV \
 		<( ./fake-data \
 			-G cmd/fake-data/testdata \
-			-c cmd/fake-data/testdata/small-content.json \
+			-c cmd/fake-data/testdata/categories.txt \
 			-r 0 \
 		)
 
