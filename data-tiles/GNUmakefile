@@ -3,9 +3,11 @@
 #
 # Run "make help" to get help about important targets and variables to set.
 #
-# Or you can create a params.mk file and set those variables.
+# You can set variables on the make command line, or set them in a params.mk file.
+# Use PARAMS=some-params.mk to use a specific params.mk file:
 #
-# Or you can say PARAMS=some-params.mk
+#	make all PARAMS=some-params.mk
+#
 
 .DEFAULT_GOAL=help
 SHELL=bash
@@ -15,15 +17,11 @@ SHELL=bash
 PARAMS?=params.mk
 -include $(PARAMS)
 
-
 #
-# Config files
+# Default datasets to use
 #
 #= name of quads file
 DATA_TILE_GRID?=DataTileGrid.json
-#= name of content.json file (? see CATVERSION)
-CONTENT?=content.json
-
 #= version of geography data to use
 GEOVERSION?=2011
 #= version of metrics data to use
@@ -57,9 +55,15 @@ DOG=$(DO)/geo
 DOB=$(DO)/breaks
 DOT=$(DO)/tiles
 
+#
+# Include snippets describing how to grab/process specific datasets.
+# Be careful about variables and order here. At present, met-fake has
+# to come after cat and geo because it needs to know which geos and
+# categories to create fake metrics for.
+#
 include geo-$(GEOVERSION).mk
-include met-$(METVERSION).mk
 include cat-$(CATVERSION).mk
+include met-$(METVERSION).mk
 
 #
 # help

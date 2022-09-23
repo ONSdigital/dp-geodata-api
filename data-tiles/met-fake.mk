@@ -13,8 +13,8 @@
 
 MET_DOWNLOADS=$(DDMV)/DATA.CSV
 
-$(MET_DOWNLOADS): fake-data $(GEO_STANDARD) $(CONTENT)
-	./atomic.sh "$(MET_DOWNLOADS)" ./fake-data -c "$(CONTENT)" "$(GEO_STANDARD)"
+$(MET_DOWNLOADS): fake-data $(GEO_STANDARD) $(CAT_STANDARD)
+	./atomic.sh "$(MET_DOWNLOADS)" ./fake-data -c "$(CAT_STANDARD)" -G "$(DPGV)"
 
 realclean::
 	rm -f "$(MET_DOWNLOADS)"
