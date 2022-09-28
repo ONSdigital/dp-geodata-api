@@ -16,7 +16,7 @@
 
 LAD_URL=https://opendata.arcgis.com/api/v3/datasets/d31f826e318d441390f54f472d976ee1_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
 
-MSOA_URL=https://opendata.arcgis.com/api/v3/datasets/ec053fbfee484bdcacc3ff8f328f605e_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
+MSOA_URL=https://opendata.arcgis.com/api/v3/datasets/38255434eb54456cbd202f54fddfe5c9_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
 
 OA_URL=https://opendata.arcgis.com/api/v3/datasets/5670c14a21224d8187357a095121ca39_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
 
