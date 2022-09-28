@@ -8,8 +8,8 @@
 # use the bundled quads file
 DATA_TILE_GRID=DataTileGrid.json
 
-# use cat-2011.mk
-CATVERSION=2011
+# use cat-2011-all.mk
+CATVERSION=2011-all
 
 # use geo-2011.mk
 GEOVERSION=2011

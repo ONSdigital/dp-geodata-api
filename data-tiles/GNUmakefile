@@ -27,7 +27,7 @@ GEOVERSION?=2011
 #= version of metrics data to use
 METVERSION?=2011
 #= version of categories.txt/content.json to use
-CATVERSION?=2011
+CATVERSION?=2011-all
 #= set to "-R" to calculate metric ratios
 CALC_RATIOS?=
 
@@ -38,19 +38,23 @@ CALC_RATIOS?=
 D?=data
 
 DD=$D/downloads
+DDC=$(DD)/cat
+DDCV=$(DDC)/$(CATVERSION)
 DDG=$(DD)/geo
 DDGV=$(DDG)/$(GEOVERSION)
 DDM=$(DD)/metrics
 DDMV=$(DDM)/$(METVERSION)
 
 DP=$D/processed
+DPC=$(DP)/cat
+DPCV=$(DPC)/$(CATVERSION)
 DPG=$(DP)/geo
 DPGV=$(DPG)/$(GEOVERSION)
 DPM=$(DP)/metrics
 DPMV=$(DPM)/$(METVERSION)
 
 #= output directory
-DO?=$D/output
+DO?=$D/output/default
 DOG=$(DO)/geo
 DOB=$(DO)/breaks
 DOT=$(DO)/tiles
@@ -95,7 +99,7 @@ clean::		## remove generated files
 #
 .PHONY: dirs
 dirs:	## create output directories (must set Important Variables)
-	mkdir -p $(DDGV) $(DDMV) $(DPGV) $(DPMV) $(DOG) $(DOB) $(DOT)
+	mkdir -p $(DDCV) $(DDGV) $(DDMV) $(DPCV) $(DPGV) $(DPMV) $(DOG) $(DOB) $(DOT)
 
 #
 # binaries
