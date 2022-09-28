@@ -3,6 +3,7 @@ package content
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 )
@@ -103,4 +104,34 @@ func (c *Content) Categories() []string {
 		}
 	}
 	return cats
+}
+
+// NamesToCats creates a map to lookup a category code given a category name.
+// This is used when converting plain text headings in spreadsheets to specific
+// category codes.
+func (c *Content) NamesToCats(classcode string) (map[string]string, error) {
+	catmap := map[string]string{}
+
+	for _, group := range c.TopicGroups {
+		for _, topic := range group.Topics {
+			for _, variable := range topic.Variables {
+				for _, classification := range variable.Classifications {
+					if classification.Code != classcode {
+						continue
+					}
+					for _, category := range classification.Categories {
+						_, ok := catmap[category.Name]
+						if ok {
+							return nil, fmt.Errorf(
+								"duplicate: %q",
+								category.Name,
+							)
+						}
+						catmap[category.Name] = category.Code
+					}
+				}
+			}
+		}
+	}
+	return catmap, nil
 }
