@@ -269,8 +269,11 @@ test: \
 .PHONY: test-extract-categories
 test-extract-categories: extract-categories	## test extract-categories cli
 	diff \
-		cmd/extract-categories/testdata/categories.txt \
-		<( ./extract-categories < cmd/extract-categories/testdata/content.json )
+		cmd/extract-categories/testdata/old-categories.txt \
+		<( ./extract-categories < cmd/extract-categories/testdata/old-content.json )
+	diff \
+		cmd/extract-categories/testdata/new-categories.txt \
+		<( ./extract-categories < cmd/extract-categories/testdata/new-content.json )
 
 
 .PHONY: test-fake-data
