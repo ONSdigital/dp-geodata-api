@@ -52,6 +52,7 @@ debug:	## run poc service in debug mode
 .PHONY: test
 test:	## run poc tests
 	go test -race -cover ./...
+	cd data-tiles && make test
 
 .PHONY: cover
 cover:	## aggregate coverage hat tip @efragkiadaki
