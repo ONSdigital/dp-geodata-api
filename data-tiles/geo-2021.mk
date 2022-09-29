@@ -61,7 +61,7 @@ realclean::
 # MSOA names file from House of Commons
 #
 # URL to download MSOA names
-MSOA_NAMES_URL=https://houseofcommonslibrary.github.io/msoanames/MSOA-Names-1.16.csv
+MSOA_NAMES_URL=https://houseofcommonslibrary.github.io/msoanames/MSOA-Names-2.0.csv
 
 # path to downloaded msoa names file
 MSOA_NAMES=$(DDGV)/msoa-names.csv
@@ -113,7 +113,14 @@ clean::
 
 $(STANDARD_MSOA): $(RAW_MSOA) $(MSOA_NAMES) rename-msoas normalise
 	./atomic.sh "$@" bash -o pipefail -c ' \
-		./rename-msoas -n "$(MSOA_NAMES)" < "$(RAW_MSOA)" | \
+		./rename-msoas \
+			-c msoa21cd \
+			-e msoa21hclnm \
+			-w msoa21hclnmw \
+			-C MSOA21CD \
+			-E MSOA21NM \
+			-W MSOA21NMW \
+			-n "$(MSOA_NAMES)" < "$(RAW_MSOA)" | \
 		./normalise -t MSOA -c MSOA21CD -e MSOA21NM -w MSOA21NM \
 	'
 clean::

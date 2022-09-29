@@ -111,7 +111,14 @@ clean::
 
 $(STANDARD_MSOA): $(DDGV)/$(RAW_MSOA) $(DDGV)/$(MSOA_NAMES) rename-msoas normalise
 	./atomic.sh "$@" bash -o pipefail -c ' \
-		./rename-msoas -n "$(DDGV)/$(MSOA_NAMES)" < "$(DDGV)/$(RAW_MSOA)" | \
+		./rename-msoas \
+			-c msoa11cd \
+			-e msoa11hclnm \
+			-w msoa11hclnmw \
+			-C MSOA11CD \
+			-E MSOA11NM \
+			-W MSOA11NMW \
+			-n "$(DDGV)/$(MSOA_NAMES)" < "$(DDGV)/$(RAW_MSOA)" | \
 		./normalise -t MSOA -c MSOA11CD -e MSOA11NM -e MSOA11NMW \
 	'
 clean::
