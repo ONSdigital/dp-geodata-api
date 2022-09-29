@@ -20,7 +20,6 @@ func main() {
 	seed := flag.Int64("r", 0, "random number seed")
 	flag.Parse()
 
-	log.Printf("Loading %s\n", *catfile)
 	cats, err := cat.LoadCategories(*catfile)
 	if err != nil {
 		log.Fatal(err)
