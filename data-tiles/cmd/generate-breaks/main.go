@@ -122,7 +122,7 @@ func genbreaksWithRatios(
 	dir string,
 ) error {
 	for _, thiscat := range cats {
-		fmt.Fprintf(os.Stderr, " %s\r", thiscat)
+		fmt.Fprintf(os.Stderr, " %s\n", thiscat)
 
 		totcat, err := cat.GuessTotalsCat(thiscat)
 		if err != nil {
@@ -202,7 +202,7 @@ func genbreaksWithoutRatios(
 	dir string,
 ) error {
 	for _, thiscat := range cats {
-		fmt.Fprintf(os.Stderr, " %s\r", thiscat)
+		fmt.Fprintf(os.Stderr, " %s\n", thiscat)
 
 		ratios := make(map[types.Geotype][]float64)
 
