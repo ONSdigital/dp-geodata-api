@@ -8,6 +8,15 @@
 #
 #	make all PARAMS=some-params.mk
 #
+# Canned params files are named params-*.mk.
+# You can copy one of these to params.mk and modify if you need to locally.
+# When params.mk exists, you don't have to specify PARAMS=
+#
+# So you can do this:
+#
+#	cp params-2021-fake.mk params.mk
+#	vim params.mk
+#	make all
 
 .DEFAULT_GOAL=help
 SHELL=bash
