@@ -17,6 +17,7 @@ RUN apt-get update && \
         git \
         gnupg \
         iputils-ping \
+        jq \
         man \
         net-tools \
         openssh-client \
