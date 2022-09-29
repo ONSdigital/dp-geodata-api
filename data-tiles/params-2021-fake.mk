@@ -8,8 +8,8 @@
 # use the bundled quads file
 DATA_TILE_GRID=DataTileGrid.json
 
-# use content-2022-09-05.json from confluence
-CATVERSION=2021
+# use cat-2021-all.mk
+CATVERSION=2021-all
 
 # use geo-2021.mk
 GEOVERSION=2021

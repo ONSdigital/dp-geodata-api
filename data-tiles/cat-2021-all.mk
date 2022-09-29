@@ -1,5 +1,5 @@
 #
-# cat-2021.mk -- rules to get 2021 categories.txt
+# cat-2021-all.mk -- rules to get 2021 content.json
 #
 # This makefile is mean to be included by GNUmakefile; it's not independent
 #
@@ -10,14 +10,11 @@
 #
 # Each file named in those variables should have targets in this file.
 
-content-2022-09-05.json:
-	@echo "Please download content.json 2022-09-05 from Confluence"
-	@echo "and place in $?"
-	false
+CAT_2021_ALL_URL=https://ons-dp-sandbox-atlas-data.s3.eu-west-2.amazonaws.com/content-json/2021-all-atlas-content-incomplete-short-var-descs.json
 
 CAT_DOWNLOADS=$(DDCV)/content.json
-$(CAT_DOWNLOADS): content-2022-09-05.json
-	cp content-2022-09-05.json "$(CAT_DOWNLOADS)"
+$(CAT_DOWNLOADS):
+	./atomic.sh "$(CAT_DOWNLOADS)" curl "$(CAT_2021_ALL_URL)"
 clean::
 	rm -f "$(CAT_DOWNLOADS)"
 
