@@ -3,23 +3,14 @@ package main
 import (
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"flag"
 	"log"
 	"os"
 
-	"github.com/jszwec/csvutil"
 	"github.com/spkg/bom"
 	"github.com/twpayne/go-geom"
 	"github.com/twpayne/go-geom/encoding/geojson"
-)
-
-const (
-	names = "data/downloads/geo/MSOA-Names-1.16.csv"
-
-	// geojson property keys
-	propCode  = "MSOA11CD"
-	propEname = "MSOA11NM"
-	propWname = "MSOA11NMW"
 )
 
 // geojson.FeatureCollection doesn't have CRS
@@ -32,8 +23,27 @@ type FeatureCollection struct {
 }
 
 func main() {
-	names := flag.String("n", names, "input MSOA names file")
+	names := flag.String("n", "", "input MSOA names file")
+	chdr := flag.String("c", "msoa11cd", "geocode CSV header")
+	ehdr := flag.String("e", "msoa11hclnm", "English name CSV header")
+	whdr := flag.String("w", "msoa11hclnmw", "Welsh name CSV header")
+	cprop := flag.String("C", "MSOA11CD", "geocode geojson property")
+	eprop := flag.String("E", "MSOA11NM", "English name geojson property")
+	wprop := flag.String("W", "MSOA11NMW", "Welsh name geojson property")
 	flag.Parse()
+
+	if *names == "" {
+		log.Fatal("must provide MSOA names file (-n)")
+	}
+
+	if *chdr == "" || *ehdr == "" || *whdr == "" || *cprop == "" || *eprop == "" || *wprop == "" {
+		log.Fatal("must provide all header and property names")
+	}
+
+	enames, wnames, err := loadnames(*names, *chdr, *ehdr, *whdr)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	dec := json.NewDecoder(os.Stdin)
 	var col FeatureCollection
@@ -41,12 +51,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	enames, wnames, err := loadnames(*names)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	rename(&col, enames, wnames)
+	rename(&col, enames, wnames, *cprop, *eprop, *wprop)
 
 	enc := json.NewEncoder(os.Stdout)
 	if err = enc.Encode(col); err != nil {
@@ -54,53 +59,62 @@ func main() {
 	}
 }
 
-func loadnames(name string) (enames, wnames map[string]string, err error) {
+func loadnames(name, codehdr, ehdr, whdr string) (enames, wnames map[string]string, err error) {
 	f, err := os.Open(name)
 	if err != nil {
 		return nil, nil, err
 	}
 	defer f.Close()
 
-	// The MSOA file contains a UTF-8 BOM
+	// The MSOA file may contain a UTF-8 BOM
 	bomreader := bom.NewReader(f)
 
 	csvreader := csv.NewReader(bomreader)
-	dec, err := csvutil.NewDecoder(csvreader)
+
+	rows, err := csvreader.ReadAll()
 	if err != nil {
 		return nil, nil, err
 	}
-
-	type hcname struct {
-		Code          string `csv:"msoa11cd"`
-		EnglishName   string `csv:"msoa11nm"`
-		WelshName     string `csv:"msoa11nmw"`
-		HCEnglishName string `csv:"msoa11hclnm"`
-		HCWelshName   string `csv:"msoa11hclnmw"`
-		Laname        string `csv:"Laname"`
+	if len(rows) <= 1 {
+		return nil, nil, errors.New("not enough data in MSOA names file")
 	}
 
-	var hcnames []hcname
-	if err := dec.Decode(&hcnames); err != nil {
-		return nil, nil, err
+	ccol := findHeader(codehdr, rows[0])
+	ecol := findHeader(ehdr, rows[0])
+	wcol := findHeader(whdr, rows[0])
+	if ccol == -1 || ecol == -1 || wcol == -1 {
+		return nil, nil, errors.New("could not find headers in MSOA names file")
 	}
 
 	enames = map[string]string{}
 	wnames = map[string]string{}
-	for _, row := range hcnames {
-		if row.HCEnglishName != "" {
-			enames[row.Code] = row.HCEnglishName
+	for _, row := range rows[1:] {
+		geocode := row[ccol]
+		ename := row[ecol]
+		if ename != "" {
+			enames[geocode] = ename
 		}
-		if row.HCWelshName != "" {
-			wnames[row.Code] = row.HCWelshName
+		wname := row[wcol]
+		if wname != "" {
+			wnames[geocode] = wname
 		}
 	}
 
 	return enames, wnames, nil
 }
 
-func rename(col *FeatureCollection, enames, wnames map[string]string) {
+func findHeader(want string, row []string) int {
+	for i, header := range row {
+		if header == want {
+			return i
+		}
+	}
+	return -1
+}
+
+func rename(col *FeatureCollection, enames, wnames map[string]string, cprop, eprop, wprop string) {
 	for _, feat := range col.Features {
-		code, ok := feat.Properties[propCode].(string)
+		code, ok := feat.Properties[cprop].(string)
 		if !ok || code == "" {
 			continue
 		}
@@ -112,11 +126,11 @@ func rename(col *FeatureCollection, enames, wnames map[string]string) {
 		}
 
 		if ename != "" {
-			feat.Properties[propEname] = ename
+			feat.Properties[eprop] = ename
 		}
 
 		if wname != "" {
-			feat.Properties[propWname] = wname
+			feat.Properties[wprop] = wname
 		}
 	}
 }
