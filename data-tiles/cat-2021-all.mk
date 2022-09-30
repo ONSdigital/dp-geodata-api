@@ -15,7 +15,7 @@ CAT_2021_ALL_URL=https://ons-dp-sandbox-atlas-data.s3.eu-west-2.amazonaws.com/co
 CAT_DOWNLOADS=$(DDCV)/content.json
 $(CAT_DOWNLOADS):
 	./atomic.sh "$(CAT_DOWNLOADS)" curl "$(CAT_2021_ALL_URL)"
-clean::
+realclean::
 	rm -f "$(CAT_DOWNLOADS)"
 
 CAT_STANDARD=$(DPCV)/categories.txt
