@@ -15,10 +15,10 @@
 #
 
 # The LAD geodata is found by:
-# 1. Go to https://geoportal.statistics.gov.uk/datasets/ons::local-authority-districts-december-2021-uk-bgc/explore?location=55.215503%2C-3.316939%2C7.48
+# 1. Go to https://geoportal.statistics.gov.uk/datasets/ons::local-authority-districts-december-2021-gb-bgc/about
 # 2. Select Download
 # 3. Select GeoJSON
-LAD_URL=https://opendata.arcgis.com/api/v3/datasets/0f131e03df73415b824a1c214594eeab_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
+LAD_URL=https://opendata.arcgis.com/api/v3/datasets/1782872283f648828142036f3b213fb3_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
 
 MSOA_URL=https://opendata.arcgis.com/api/v3/datasets/38255434eb54456cbd202f54fddfe5c9_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
 
