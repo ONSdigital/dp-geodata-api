@@ -11,10 +11,9 @@ import (
 )
 
 type geo struct {
-	En      string    `json:"en"`
-	GeoType string    `json:"geoType"`
-	GeoCode string    `json:"geoCode"`
-	Bbox    []float64 `json:"bbox"`
+	En      string `json:"en"`
+	GeoType string `json:"geoType"`
+	GeoCode string `json:"geoCode"`
 }
 
 func main() {
@@ -41,19 +40,12 @@ func main() {
 			en := feat.Properties["ename"].(string)
 			geotype := feat.Properties["geotype"].(string)
 			geocode := feat.Properties["geocode"].(string)
-			bounds := feat.BBox
 			geos = append(
 				geos,
 				geo{
 					En:      en,
 					GeoType: geotype,
 					GeoCode: geocode,
-					Bbox: []float64{
-						bounds.Min(0),
-						bounds.Min(1),
-						bounds.Max(0),
-						bounds.Max(1),
-					},
 				},
 			)
 		}
