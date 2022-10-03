@@ -7,6 +7,7 @@
 #
 #	GEO_DOWNLOADS	list of downloaded geo files
 #	GEO_STANDARD	list of normalised geo files
+#	GEO_LOOKUP_FILES	which normalised geo files generate geoLookup.json
 #
 # Each file named in those variables should have targets in this file.
 
@@ -88,6 +89,11 @@ STANDARD_OA=$(DPGV)/oa.geojson
 # Set GEO_STANDARD so parent make file can use processed files as targets.
 #
 GEO_STANDARD=$(STANDARD_LAD) $(STANDARD_LSOA) $(STANDARD_MSOA) $(STANDARD_OA)
+
+#
+# Set GEO_LOOKUP_FILES to a subset of GEO_STANDARD
+#
+GEO_LOOKUP_FILES=$(STANDARD_LAD) $(STANDARD_MSOA)
 
 #
 # Rules to process geo files

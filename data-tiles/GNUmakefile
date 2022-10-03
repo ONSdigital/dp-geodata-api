@@ -93,7 +93,7 @@ help:	## this help
 # do everything
 #
 .PHONY: all
-all: dirs $(DOG)/.done $(DOT)/.done $(DOB)/.done	## build all output files
+all: dirs $(DOG)/.done $(DOT)/.done $(DOB)/.done $(DO)/geoLookup.json	## build all output files
 
 #
 # cleanup
@@ -118,6 +118,7 @@ BINARIES=\
 	fake-data \
 	generate-breaks \
 	generate-tiles \
+	geolookup \
 	map-categories \
 	normalise \
 	recode-lads \
@@ -177,6 +178,17 @@ $(DOG)/.done: $(GEO_STANDARD) split-geojson
 	mv "$(DOG_TMP)" "$(DOG)"
 clean::
 	./atomic-rm.sh "$(DOG_TMP)" "$(DOG)"
+
+#
+# geoLookup.json
+#
+.PHONY: geoLookup.json
+geoLookup.json: $(DO)/geoLookup.json	## generate geoLookup.json file
+
+$(DO)/geoLookup.json: $(GEO_LOOKUP_FILES) geolookup
+	./atomic.sh "$(DO)/geoLookup.json" ./geolookup $(GEO_LOOKUP_FILES)
+clean::
+	rm -f "$(DO)/geoLookup.json"
 
 #
 # metrics
@@ -271,6 +283,7 @@ test: \
 	test-fake-data \
 	test-generate-breaks \
 	test-generate-tiles \
+	test-geolookup \
 	test-map-categories \
 	test-normalise	\
 	test-recode-lads \
@@ -329,7 +342,6 @@ test-generate-breaks-non-ratio: generate-breaks	## test generate-breaks cli in n
 		-q cmd/generate-breaks/testdata/quads.json
 	diff -r cmd/generate-breaks/testdata/output-non-ratio "$(TEST_OUTPUT)"
 
-
 .PHONY: test-generate-tiles
 test-generate-tiles: \
 	test-generate-tiles-ratio \
@@ -357,6 +369,12 @@ test-generate-tiles-non-ratio: generate-tiles	## test generate-tiles cli in non-
 		-c cmd/generate-tiles/testdata/categories.txt \
 		-q cmd/generate-tiles/testdata/quads.json
 	diff -r cmd/generate-tiles/testdata/output-non-ratio "$(TEST_OUTPUT)"
+
+.PHONY: test-geolookup
+test-geolookup: geolookup	## test geolookup cli
+	diff \
+		<( jq -S < cmd/geolookup/testdata/out.json ) \
+		<( ./geolookup cmd/geolookup/testdata/in.geojson | jq -S )
 
 .PHONY: test-map-categories
 test-map-categories: map-categories	## test map-categories cli
