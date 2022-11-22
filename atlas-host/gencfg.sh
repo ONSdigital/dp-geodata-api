@@ -11,7 +11,7 @@ set -e
 main() {
 	local instance=$(
 		aws ec2 describe-instances \
-			--filter 'Name=tag:Name,Values=sandbox - atlas 1' \
+			--filter "Name=tag:Name,Values=$ONS_DP_ENV - atlas 1" \
 			--query 'Reservations[0].Instances[0].InstanceId' \
 			--output text
 	)
