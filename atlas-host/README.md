@@ -41,9 +41,10 @@ Certain environment variables must be set when working with any of the atlas uti
 	AWS_PROFILE
 	ATLAS_USER
 	COMPOSE_PROJECT_NAME
+	ONS_DP_ENV
 
-`AWS_PROFILE` is `dp-sandbox` currently.
-None of this has been tested in any other environment, but we expect it to be used in prod eventually.
+`AWS_PROFILE` is `dp-sandbox` or `dp-prod` currently.
+(We haven't set up a staging instance yet.)
 
 `ATLAS_USER` is your username in the Atlas container.
 These are hardcoded in the Dockerfile used to create the image.
@@ -52,15 +53,17 @@ See the Dockerfile for yours.
 `COMPOSE_PROJECT_NAME` is used to distinguish your Docker objects from other users'.
 The convention is `atlas-$ATLAS_USER`.
 
-You can copy `atlas.env.example` to `atlas.env` and modify to suit.
+`ONS_DP_ENV` is `sandbox` or `prod`.
 
-Do this before working with any atlas utilities:
+You can copy `atlas.env.example` and modify to suit.
 
-	. ./atlas.env
+Then source your env file before working with any atlas utilities, eg:
+
+	. ./sandbox.env
 
 You can clear the environment variables with:
 
-	. ./atlas.env -d
+	. ./no.env
 
 
 ## ssh.cfg
@@ -119,6 +122,24 @@ If the ssh tunnel is up, and you are using the `atlas` context, you can do this:
 
 	make image
 
+
+## Enabling logins in your Atlas Container
+
+You need to set up your ssh key in your home directory before you can login to your
+container.
+
+Home directories are under `/data` on the Atlas host itself.
+For example `/data/dl` is my home.
+
+So login to the Atlas host and set up a basic home which allows you to login, something like this:
+
+	make ssh-atlas
+	sudo -s
+	cd /data
+	mkdir -m 0700 dl		# your username as seen in Dockerfile
+	mkdir -m 0700 dl/.ssh		#   "      "
+	vi dl/.ssh/authorized_keys	# << paste in your ssh public key
+	chown -R 2001:2001 dl		# use your uid:gid as seen in Dockerfile
 
 ## Starting your Atlas Container
 
