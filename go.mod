@@ -1,3 +1,4 @@
+// Deprecated: No longer in active development
 module github.com/ONSdigital/dp-geodata-api
 
 go 1.18

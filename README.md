@@ -1,4 +1,7 @@
 # dp-geodata-api
+
+⚠️ This repository will be archived in August 2024 as it is no longer in development. ⚠️
+
 Census Atlas geodata API and database.
 
 ### Further Docs
